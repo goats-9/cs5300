@@ -45,7 +45,7 @@ std::atomic<int> counter(0);
  * @return Populated result in `thInfo`.
  */
 void chunkRunner(ThreadInfo& thInfo) {
-    // Remainder i.e., N % K rows are to be given to first N % K threads.
+    // Remaining i.e., N % K rows are to be given to first N % K threads.
     // Find starting row as id * (N / K) + min(id, N % K);
     int l = thInfo.id * (N / K) + std::min(thInfo.id, N % K);
     for (int i = l; i < std::min(N, l + N / K + (thInfo.id < N % K)); i++) {
@@ -80,6 +80,30 @@ void dynamicRunner(ThreadInfo& thInfo) {
     } 
 }
 
+/**
+ * @brief Runner function for dynamic block technique. For K threads we will
+ * have blocks of size (N / K) * (N / K), resulting in a total of K * K blocks.
+ * @param thInfo Thread information.
+ * @return Populated result in `thInfo`.
+ */
+void dynamicBlockRunner(ThreadInfo& thInfo) {
+    // Attempt to get a new block
+    while (counter * rowInc < K * K) {
+        // Acquire block and increment
+        int b = counter++;
+        for (int i = b * rowInc; i < std::min((b + 1) * rowInc, K * K); i++) {
+            // Compute (row, col) as (b / K, b % K);
+            int row = i / K, col = i % K;
+            // Now compute limits based on row and col, similar to the chunk case
+            int rowl = row * (N / K) + std::min(row, N % K);
+            int coll = col * (N / K) + std::min(col, N % K);
+            for (int j = 0; j < N / K + (row < N % K); j++)
+                for (int k = 0; k < N / K + (col < N % K); k++)
+                    thInfo.res += !A[rowl + j][coll + k];
+        }
+    }
+}
+
 void help(std::string name) {
     std::cerr << "Usage: " << name << " [options]\n\n"
               << "Options:\n"
@@ -108,7 +132,7 @@ int main(int argc, char* argv[]) {
             if (tech == "chunk") runner = chunkRunner;
             else if (tech == "mixed") runner = mixedRunner;
             else if (tech == "dynamic") runner = dynamicRunner;
-            else if (tech == "block");
+            else if (tech == "block") runner = dynamicBlockRunner;
             else {
                 help(argv[0]);
                 return 1;
