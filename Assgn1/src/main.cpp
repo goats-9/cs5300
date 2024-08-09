@@ -135,8 +135,8 @@ void dynamicBlockRunner(ThreadInfo& thInfo) {
 void help(std::string name) {
     std::cerr << "Usage: " << name << " [options]\n\n"
               << "Options:\n"
-              << "\t-h,--help\t\tDisplay this information\n"
-              << "\t-t,--technique {chunk|mixed|dynamic|block}\tUse the specified technique for computing matrix sparsity"
+              << "  -h,--help                                  Display this information\n"
+              << "  -t,--technique {chunk|mixed|dynamic|block} Use the specified technique for computing matrix sparsity"
               << std::endl;
 }
 
