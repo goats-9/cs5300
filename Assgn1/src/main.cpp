@@ -22,20 +22,47 @@
  * @brief Information contained by a thread.
  */
 struct ThreadInfo {
-    int id;     /// Thread id
-    int res;    /// Result of thread computation
+    uint64_t id;    /// Thread id
+    int res;        /// Result of thread computation
+};
+
+/**
+ * @brief Counter class, implemented using std::atomic objects.
+ */
+template<class T>
+class Counter {
+    std::atomic<T> ctr;   /// 64-bit atomic unsigned counter.
+public:
+    /**
+     * @brief Constuctor for Counter Class.
+     * @param n Starting integer for counter, defaults to 0.
+     */
+    Counter(T n = 0) : ctr(n) {}
+
+    /**
+     * @brief Method to get current value of counter.
+     * @return Current value of counter.
+     */
+    T get() { return ctr; }
+
+    /**
+     * @brief Method to get and post-increment counter atomically.
+     * @param inc Amount to increase the counter by.
+     * @return Counter value before increment.
+     */
+    T getAndIncrement(T inc = 1) { return ctr.fetch_add(inc); }
 };
 
 // Constants
 
-char* INFILE = "inp.txt";   /// Input file
-char* OUTFILE = "out.txt";  /// Output file
+const char* INFILE = "inp.txt";   /// Input file
+const char* OUTFILE = "out.txt";  /// Output file
 
 // Global variables
 
-int N, S, K, rowInc;
+uint64_t N, S, K, rowInc;
 std::vector<std::vector<int>> A;
-std::atomic<int> counter(0);
+Counter<uint64_t> counter(0);    /// For dynamic methods only
 
 // Thread runners
 
@@ -47,8 +74,8 @@ std::atomic<int> counter(0);
 void chunkRunner(ThreadInfo& thInfo) {
     // Remaining i.e., N % K rows are to be given to first N % K threads.
     // Find starting row as id * (N / K) + min(id, N % K);
-    int l = thInfo.id * (N / K) + std::min(thInfo.id, N % K);
-    for (int i = l; i < std::min(N, l + N / K + (thInfo.id < N % K)); i++) {
+    uint64_t l = thInfo.id * (N / K) + std::min(thInfo.id, N % K);
+    for (uint64_t i = l; i < std::min(N, l + N / K + (thInfo.id < N % K)); i++) {
         for (auto &u : A[i]) thInfo.res += !u;
     }
 }
@@ -59,7 +86,7 @@ void chunkRunner(ThreadInfo& thInfo) {
  * @return Populated result in `thInfo`.
  */
 void mixedRunner(ThreadInfo& thInfo) {
-    for (int i = thInfo.id; i < N; i += K) {
+    for (uint64_t i = thInfo.id; i < N; i += K) {
         for (auto &u : A[i]) thInfo.res += !u;
     }
 }
@@ -71,10 +98,10 @@ void mixedRunner(ThreadInfo& thInfo) {
  */
 void dynamicRunner(ThreadInfo& thInfo) {
     // Attempt to get a new row
-    while (counter * rowInc < N) {
+    while (counter.get() < N) {
         // Acquire row and increment
-        int r = counter++;
-        for (int i = r * rowInc; i < std::min((r + 1) * rowInc, N); i++) {
+        uint64_t r = counter.getAndIncrement(rowInc);
+        for (uint64_t i = r; i < std::min(r + rowInc, N); i++) {
             for (auto &u : A[i]) thInfo.res += !u;
         }
     } 
@@ -88,15 +115,15 @@ void dynamicRunner(ThreadInfo& thInfo) {
  */
 void dynamicBlockRunner(ThreadInfo& thInfo) {
     // Attempt to get a new block
-    while (counter * rowInc < K * K) {
+    while (counter.get() < K * K) {
         // Acquire block and increment
-        int b = counter++;
-        for (int i = b * rowInc; i < std::min((b + 1) * rowInc, K * K); i++) {
+        int b = counter.getAndIncrement(rowInc);
+        for (int i = b; i < std::min(b + rowInc, K * K); i++) {
             // Compute (row, col) as (b / K, b % K);
-            int row = i / K, col = i % K;
+            uint64_t row = i / K, col = i % K;
             // Now compute limits based on row and col, similar to the chunk case
-            int rowl = row * (N / K) + std::min(row, N % K);
-            int coll = col * (N / K) + std::min(col, N % K);
+            uint64_t rowl = row * (N / K) + std::min(row, N % K);
+            uint64_t coll = col * (N / K) + std::min(col, N % K);
             for (int j = 0; j < N / K + (row < N % K); j++)
                 for (int k = 0; k < N / K + (col < N % K); k++)
                     thInfo.res += !A[rowl + j][coll + k];
