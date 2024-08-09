@@ -1,0 +1,14 @@
+This zip archive contains a source code that implements various multi-threaded
+solutions in C++ to count the sparsity of a matrix. The sparsity of a matrix is
+defined as the number of zero entries in it.
+
+Compile the source code by running the following command.
+
+    g++ -O3 -std=c++20 Assgn1-Src-CS21BTECH11018.cpp
+
+To run the generated executable, issue the following command.
+
+    ./a.out
+
+A dialog showing the required options will be displayed. Use the appropriate
+options for employing the right technique to compute the sparsity of the matrix.

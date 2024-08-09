@@ -15,6 +15,7 @@
 #include <vector>
 #include <atomic>
 #include <chrono>
+#include <cstring>
 
 // Classes and structs
 
@@ -170,8 +171,16 @@ int main(int argc, char* argv[]) {
         }
     }
     // Setup input and output filestreams
-    freopen(INFILE, "r", stdin);
-    freopen(OUTFILE, "w", stdout);
+    if (!freopen(INFILE, "r", stdin)) {
+        std::cerr << "[ERROR] Opening input file " << INFILE << " failed: " 
+                  << std::strerror(errno) << std::endl;
+        return 1;
+    }
+    if (!freopen(OUTFILE, "w", stdout)) {
+        std::cerr << "[ERROR] Opening output file " << OUTFILE << " failed: " 
+                  << std::strerror(errno) << std::endl;
+        return 1;
+    }
     // Read inputs
     std::cin >> N >> S >> K >> rowInc;
     A.assign(N, std::vector<int> (N));
