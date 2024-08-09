@@ -117,15 +117,15 @@ void dynamicBlockRunner(ThreadInfo& thInfo) {
     // Attempt to get a new block
     while (counter.get() < K * K) {
         // Acquire block and increment
-        int b = counter.getAndIncrement(rowInc);
-        for (int i = b; i < std::min(b + rowInc, K * K); i++) {
+        uint64_t b = counter.getAndIncrement(rowInc);
+        for (uint64_t i = b; i < std::min(b + rowInc, K * K); i++) {
             // Compute (row, col) as (b / K, b % K);
             uint64_t row = i / K, col = i % K;
             // Now compute limits based on row and col, similar to the chunk case
             uint64_t rowl = row * (N / K) + std::min(row, N % K);
             uint64_t coll = col * (N / K) + std::min(col, N % K);
-            for (int j = 0; j < N / K + (row < N % K); j++)
-                for (int k = 0; k < N / K + (col < N % K); k++)
+            for (uint64_t j = 0; j < N / K + (row < N % K); j++)
+                for (uint64_t k = 0; k < N / K + (col < N % K); k++)
                     thInfo.res += !A[rowl + j][coll + k];
         }
     }
@@ -179,11 +179,11 @@ int main(int argc, char* argv[]) {
     // Set up threads and respective ThreadInfo structs to be passed
     std::vector<std::thread> threads(K);
     std::vector<ThreadInfo> threadInfos(K);
-    for (int i = 0; i < K; i++) threadInfos[i].id = i, threadInfos[i].res = 0;
+    for (uint64_t i = 0; i < K; i++) threadInfos[i].id = i, threadInfos[i].res = 0;
     // Start timer
     auto startTime = std::chrono::high_resolution_clock::now();
     // Run threads and join them
-    for (int i = 0; i < K; i++) threads[i] = std::thread(runner, std::ref(threadInfos[i]));
+    for (uint64_t i = 0; i < K; i++) threads[i] = std::thread(runner, std::ref(threadInfos[i]));
     for (auto& th : threads) th.join();
     // Finish timer
     auto endTime = std::chrono::high_resolution_clock::now();
