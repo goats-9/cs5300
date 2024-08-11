@@ -16,6 +16,7 @@
 #include <atomic>
 #include <chrono>
 #include <cstring>
+#include <cmath>
 
 // Classes and structs
 
@@ -61,7 +62,7 @@ const char* OUTFILE = "out.txt";  /// Output file
 
 // Global variables
 
-uint64_t N, S, K, rowInc;
+uint64_t N, S, K, rowInc, blockSize;
 std::vector<std::vector<int>> A;
 Counter<uint64_t> counter(0);    /// For dynamic methods only
 
@@ -109,25 +110,29 @@ void dynamicRunner(ThreadInfo& thInfo) {
 }
 
 /**
- * @brief Runner function for dynamic block technique. For K threads we will
- * have blocks of size (N / K) * (N / K), resulting in a total of K * K blocks.
+ * @brief Runner function for dynamic block technique. We will have blocks of
+ * size blockSize. Here, we consider blockSize = sqrt(N) for a total of N blocks
+ * to make it comparable to other methods.
  * @param thInfo Thread information.
  * @return Populated result in `thInfo`.
  */
 void dynamicBlockRunner(ThreadInfo& thInfo) {
+    // Compute total number of blocks, which is ceil(N / blockSize) ^ 2.
+    uint64_t numBlocks = (N + blockSize - 1) / blockSize;
+    uint64_t totalBlocks = numBlocks * numBlocks;
     // Attempt to get a new block
-    while (counter.get() < K * K) {
+    while (counter.get() < totalBlocks) {
         // Acquire block and increment
         uint64_t b = counter.getAndIncrement(rowInc);
-        for (uint64_t i = b; i < std::min(b + rowInc, K * K); i++) {
+        for (uint64_t i = b; i < std::min(b + rowInc, totalBlocks); i++) {
             // Compute (row, col) as (b / K, b % K);
-            uint64_t row = i / K, col = i % K;
+            uint64_t row = i / numBlocks, col = i % numBlocks;
             // Now compute limits based on row and col, similar to the chunk case
-            uint64_t rowl = row * (N / K) + std::min(row, N % K);
-            uint64_t coll = col * (N / K) + std::min(col, N % K);
-            for (uint64_t j = 0; j < N / K + (row < N % K); j++)
-                for (uint64_t k = 0; k < N / K + (col < N % K); k++)
-                    thInfo.res += !A[rowl + j][coll + k];
+            uint64_t rowl = row * (N / numBlocks) + std::min(row, N % numBlocks);
+            uint64_t coll = col * (N / numBlocks) + std::min(col, N % numBlocks);
+            for (uint64_t j = rowl; j < std::min(N, rowl + N / numBlocks + (row < N % numBlocks)); j++)
+                for (uint64_t k = coll; k < std::min(N, coll + N / numBlocks + (col < N % numBlocks)); k++)
+                    thInfo.res += !A[j][k];
         }
     }
 }
@@ -183,6 +188,8 @@ int main(int argc, char* argv[]) {
     }
     // Read inputs
     std::cin >> N >> S >> K >> rowInc;
+    // Set up block size
+    blockSize = int(sqrtl(N));
     A.assign(N, std::vector<int> (N));
     for (auto &u : A) for (auto &v : u) std::cin >> v;
     // Set up threads and respective ThreadInfo structs to be passed
@@ -198,7 +205,7 @@ int main(int argc, char* argv[]) {
     auto endTime = std::chrono::high_resolution_clock::now();
     auto tm = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
     // Collect and output statistics
-    std::cout << "Time taken to count the number of zeros: " << tm << "\n";
+    std::cout << "Time taken to count the number of zeros: " << tm.count() << " ms\n";
     int sm = 0;
     for (auto &thInfo : threadInfos) sm += thInfo.res;
     std::cout << "Total number of zero-valued elements in the matrix: " << sm << '\n';
