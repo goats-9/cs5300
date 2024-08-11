@@ -137,6 +137,10 @@ void dynamicBlockRunner(ThreadInfo& thInfo) {
     }
 }
 
+/**
+ * @brief Function to print program help.
+ * @param name Name of executable, usually argv[0].
+ */
 void help(std::string name) {
     std::cerr << "Usage: " << name << " [options]\n\n"
               << "Options:\n"
@@ -159,7 +163,6 @@ int main(int argc, char* argv[]) {
             help(argv[0]);
             return 0;
         } else if (arg == "-t" || arg == "--technique") {
-            // Set up
             i++;
             std::string tech = argv[i];
             if (tech == "chunk") runner = chunkRunner;
@@ -176,6 +179,7 @@ int main(int argc, char* argv[]) {
         }
     }
     // Setup input and output filestreams
+    std::cin.tie(0)->sync_with_stdio(0);
     if (!freopen(INFILE, "r", stdin)) {
         std::cerr << "[ERROR] Opening input file " << INFILE << " failed: " 
                   << std::strerror(errno) << std::endl;

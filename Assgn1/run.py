@@ -60,9 +60,9 @@ def get_total_runtime() -> int:
         return int(L[0].split()[-2])
 
 def run_exp_1(S: int, K: int, row_inc: int):
+    plt.clf()
     # Compile the source file
     compile_source()
-    ax = plt.gca()
     L = [[0.0 for _ in range(len(SIZES))] for _ in range(len(METHODS))]
     for j, N in enumerate(SIZES):
         # Create suitable input file
@@ -74,19 +74,19 @@ def run_exp_1(S: int, K: int, row_inc: int):
                 L[i][j] += get_total_runtime()
             L[i][j] /= RUNS
     for i, method in enumerate(METHODS):
-        ax.plot(SIZES, L[i], label=method)
-    ax.legend()
-    ax.grid()
-    ax.set_ylabel('Time (ms)')
-    ax.set_xlabel('Size')
-    ax.set_title(f'Time vs. Size N (S = {S}%, K = {K}, rowInc = {row_inc})')
+        plt.plot(SIZES, L[i], label=method)
+    plt.legend()
+    plt.grid()
+    plt.ylabel('Time (ms)')
+    plt.xlabel('Size')
+    plt.title(f'Time vs. Size N (S = {S}%, K = {K}, rowInc = {row_inc})')
     plt.tight_layout()
     plt.savefig(f'{IMG_PATH}/exp1.png')
 
 def run_exp_2(N: int, S: int, row_inc: int):
+    plt.clf()
     # Compile the source file
     compile_source()
-    ax = plt.gca()
     L = [[0.0 for _ in range(len(THREADS))] for _ in range(len(METHODS))]
     for j, K in enumerate(THREADS):
         # Create suitable input file
@@ -98,19 +98,19 @@ def run_exp_2(N: int, S: int, row_inc: int):
                 L[i][j] += get_total_runtime()
             L[i][j] /= RUNS
     for i, method in enumerate(METHODS):
-        ax.plot(SIZES, L[i], label=method)
-    ax.legend()
-    ax.grid()
-    ax.set_ylabel('Time (ms)')
-    ax.set_xlabel('Number of threads')
-    ax.set_title(f'Time vs. Number of Threads K (N = {N}, S = {S}%, rowInc = {row_inc})')
+        plt.plot(THREADS, L[i], label=method)
+    plt.legend()
+    plt.grid()
+    plt.ylabel('Time (ms)')
+    plt.xlabel('Number of threads')
+    plt.title(f'Time vs. Number of Threads K (N = {N}, S = {S}%, rowInc = {row_inc})')
     plt.tight_layout()
     plt.savefig(f'{IMG_PATH}/exp2.png')
 
 def run_exp_3(N: int, K: int, row_inc: int):
+    plt.clf()
     # Compile the source file
     compile_source()
-    ax = plt.gca()
     L = [[0.0 for _ in range(len(SPARSITIES))] for _ in range(len(METHODS))]
     for j, S in enumerate(SPARSITIES):
         # Create suitable input file
@@ -122,19 +122,19 @@ def run_exp_3(N: int, K: int, row_inc: int):
                 L[i][j] += get_total_runtime()
             L[i][j] /= RUNS
     for i, method in enumerate(METHODS):
-        ax.plot(SIZES, L[i], label=method)
-    ax.legend()
-    ax.grid()
-    ax.set_ylabel('Time (ms)')
-    ax.set_xlabel('Number of threads')
-    ax.set_title(f'Time vs. Sparsity S (N = {N}, K = {K}, rowInc = {row_inc})')
+        plt.plot(SPARSITIES, L[i], label=method)
+    plt.legend()
+    plt.grid()
+    plt.ylabel('Time (ms)')
+    plt.xlabel('Sparsity (%)')
+    plt.title(f'Time vs. Sparsity S (N = {N}, K = {K}, rowInc = {row_inc})')
     plt.tight_layout()
     plt.savefig(f'{IMG_PATH}/exp3.png')
 
 def run_exp_4(N: int, S: int, K: int):
+    plt.clf()
     # Compile the source file
     compile_source()
-    ax = plt.gca()
     L = [[0.0 for _ in range(len(ROW_INCREMENTS))] for _ in range(len(METHODS[-2:]))]
     for j, row_inc in enumerate(ROW_INCREMENTS):
         # Create suitable input file
@@ -146,12 +146,12 @@ def run_exp_4(N: int, S: int, K: int):
                 L[i][j] += get_total_runtime()
             L[i][j] /= RUNS
     for i, method in enumerate(METHODS[-2:]):
-        ax.plot(SIZES, L[i], label=method)
-    ax.legend()
-    ax.grid()
-    ax.set_ylabel('Time (ms)')
-    ax.set_xlabel('Number of threads')
-    ax.set_title(f'Time vs. Row Increment rowInc (N = {N}, K = {K}, S = {S}%)')
+        plt.plot(ROW_INCREMENTS, L[i], label=method)
+    plt.legend()
+    plt.grid()
+    plt.ylabel('Time (ms)')
+    plt.xlabel('Row increment')
+    plt.title(f'Time vs. Row Increment rowInc (N = {N}, K = {K}, S = {S}%)')
     plt.tight_layout()
     plt.savefig(f'{IMG_PATH}/exp4.png')
 
