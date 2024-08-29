@@ -1,0 +1,148 @@
+\documentclass[conference,compsoc]{IEEEtran}
+\usepackage{./macros}
+
+\begin{document}
+\vspace{3cm}
+\title{CS5300 Theory Assignment 1}
+\author{Gautam Singh\\CS21BTECH11018}
+\maketitle
+
+\bigskip
+
+\begin{enumerate}
+    \item Amdahl's Law states that the speedup resulting from an \(N\)-processor
+    machine executing a program with \(p\) fraction of parallel code compared to
+    a single processor machine is \(\frac{1}{1 - p + \frac{p}{N}}\).
+    \begin{enumerate}
+        \item The maximum speedup can be achieved when the remaining \(1 - M =
+        0.7\) part of the code is parallelizable. Thus, the speedup on an
+        \(n\)-processor machine is
+        \begin{equation}
+            s = \frac{1}{0.3 + \frac{0.7}{n}} = \frac{n}{0.7 + 0.3n}
+        \end{equation}
+        As \(n \to \infty\), \(s \to \frac{1}{0.3} \approx 3.33\), thus the
+        limit of speedup is 3.33.
+        \item Assuming that the rest of the code is parallelizable, the initial
+        speedup on the \(n\)-processor machine is
+        \begin{equation}
+            s = \frac{1}{0.4 + \frac{0.6}{n}}
+        \end{equation}
+        Using \(M^\prime\) instead of \(M\) gives us a \(k\)-fold speedup, so
+        the new-speedup is
+        \begin{equation}
+            s^\prime = \frac{1}{\frac{0.4}{k} + \frac{1 - \frac{0.4}{k}}{n}} = 2s
+        \end{equation}
+        Thus,
+        \begin{align}
+            \frac{1}{\frac{0.4}{k} + \frac{1 - \frac{0.4}{k}}{n}} &= \frac{2}{0.4 + \frac{0.6}{n}} \\
+            \implies \frac{0.4}{k} + \frac{1 - \frac{0.4}{k}}{n} &= 0.2 + \frac{0.3}{n} \\
+            \implies \frac{0.4}{k}\brak{1 - \frac{1}{n}} &= 0.2 - \frac{0.7}{n} \\
+            \implies k &= \frac{4n - 4}{2n - 7}
+        \end{align}
+        \item Suppose that \(M\) accounts for \(x\) fraction of execution time.
+        Then, the initial speedup is
+        \begin{equation}
+            s = \frac{1}{x + \frac{1 - x}{n}}
+        \end{equation}
+        Now, \(M^\prime\) executes in \(\frac{x}{4}\) fraction of execution
+        time. Thus, the new speedup turns out to be
+        \begin{equation}
+            s^\prime = \frac{1}{\frac{x}{4} + \frac{1 - \frac{x}{4}}{n}} = 2s
+        \end{equation}
+        Thus,
+        \begin{align}
+            \frac{x}{4} + \frac{1 - \frac{x}{4}}{n} &= \frac{x}{2} + \frac{1 - x}{2n} \\
+            \implies \frac{x}{4} &= \frac{1 + \frac{x}{2}}{2n} \\
+            \implies x &= \frac{2}{n - 1}
+        \end{align}
+        Hence, \(M\) must account for \(\frac{2}{n - 1}\) fraction of the
+        overall execution time for \(M^\prime\) to double the program's speedup.
+    \end{enumerate}
+
+    \item The only possibility of deadlock arises when the two threads, say
+    \(A\) and \(B\) are waiting indefinitely in the \texttt{while} loops of
+    either the \texttt{lock} or \texttt{unlock} method. Let's analyze these
+    cases one-by-one.
+    \begin{enumerate}
+        \item Suppose \(A\) and \(B\) are both waiting in the \texttt{lock}
+        method. We know from the original Peterson's algorithm, that
+        \texttt{victim} will be set to either \(A\) or \(B\), thus the other
+        thread will be released.
+        \item Suppose \(A\) and \(B\) are both waiting in the \texttt{unlock}
+        method. Without loss of generality, assume \(A\) executes line 5 of the
+        \texttt{unlock} method first. Then, when \(B\) sets \(\texttt{flag}[B] =
+        false\) later on, \(A\) will be released. Otherwise, if \(A\) is slow,
+        \(B\) will be released as \(\texttt{flag}[A] = false\) already.
+        \item Suppose \(A\) is waiting in the \texttt{lock} method and \(B\) is
+        waiting in the unlock method. Then, we must have \(\texttt{flag}[B] =
+        true\). Thus, \(B\) is yet to set \(\texttt{flag}[B] = false\) in line 2
+        of the \texttt{unlock} method. When it does so, \(A\) will be released.
+    \end{enumerate}
+    Thus, this variant of Peterson's lock is deadlock-free since deadlock is
+    impossible.
+
+    Consider the following execution of two threads \(A\) and \(B\).
+    \begin{enumerate}
+        \item Initially, the critical section is empty.
+        \item Thread \(A\) acquires the lock and enters the critical section.
+        Then, it invokes the \texttt{unlock} method and sets \(\texttt{flag}[A]
+        = false\).
+        \item After \(A\) sets \(\texttt{flag}[A] = false\), thread \(B\)
+        acquires the lock and enters the critical section, after which it
+        invokes the \texttt{unlock} method. By this time, \(A\) is waiting at
+        line 5.
+        \item Now, thread \(A\) gets swapped out, so thread \(B\) overtakes
+        \(A\) and is released from the \texttt{unlock} method since
+        \(\texttt{flag}[A] = false\).
+        \item Thread \(B\) can re-enter the critical section and overtake thread
+        \(A\) an arbitrary number of times as described above, provided thread
+        \(A\) sees that \(\texttt{flag}[B] = true\) whenever it is executing the
+        check in line 5 of the \texttt{unlock} method.
+    \end{enumerate}
+    Thus, thread \(A\) can wait for an indefinite amount of time, causing it to
+    starve. Hence, this variant of Peterson's lock is \emph{not}
+    starvation-free.
+
+    \item Consider threads \(A\), \(B\) and \(C\) operating on a Herlihy-Wing
+    queue concurrently.
+    
+    Here is an execution that shows line 15 cannot be the linearization point of
+    \texttt{enq}. Suppose that the queue is empty initially.
+    \begin{enumerate}
+        \item \(A\) invokes \texttt{enq}.
+        \item \(B\) invokes \texttt{enq}.
+        \item \(A\) executes line 15 first, and increments \texttt{tail} first.
+        \item \(B\) executes line 15 after \(A\), and then executes line 16
+        before \(A\), which becomes slow.
+        \item \(C\) invokes \texttt{deq} and finds that the first non-null item
+        is the one enqueued by \(B\), since \(A\) has not executed line 16 yet.
+        Thus, \(C\) returns the item enqueued by \(B\).
+    \end{enumerate}
+    This execution shows that even though \(A\) executes line 15 before \(B\),
+    the item enqueued by \(B\) is dequeued first by \(C\). Thus, line 15 cannot
+    be the linearization point of \texttt{enq}.
+
+    Here is an execution that shows line 16 cannot be the linearization point of
+    \texttt{enq}. Suppose the queue is empty initially. 
+    \begin{enumerate}
+        \item \(A\) invokes \texttt{enq}.
+        \item \(B\) invokes \texttt{enq}.
+        \item \(B\) executes line 15 first, and increments \texttt{tail} first.
+        \item \(A\) executes line 15 after \(A\), and then executes line 16
+        before \(B\), which becomes slow.
+        \item \(B\) executes line 16 after \(A\).
+        \item After both \(A\) and \(B\) return from \texttt{enq}, \(C\) invokes
+        \texttt{deq} and finds that the first non-null item is the one enqueued
+        by \(A\). Thus, \(C\) returns the item enqueued by \(A\).
+    \end{enumerate}
+    This execution shows that even though \(A\) executes line 16 before \(B\),
+    the item enqueued by \(B\) is dequeued first by \(C\) since \(B\) got the
+    earlier slot in the queue. Thus, line 16 cannot be the linearization point
+    of \texttt{enq}.
+
+    This does \emph{not} mean that \texttt{enq} is not linearlizable. It means
+    that the linearization point of \texttt{enq} can be chosen depending on the
+    execution history to make the history linearlizable.
+\end{enumerate}
+
+\end{document}
