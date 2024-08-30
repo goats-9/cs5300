@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+
+'''
+File    : run.py
+Author  : Gautam Singh (CS21BTECH11018)
+Date    : 2024-08-29
+Purpose : Run tests and generate plots for report
+'''
+
+# Imports
+import subprocess
+import matplotlib.pyplot as plt
+import sys
+
+# Constants
+SRC_DIR = "src"
+INFILE = f"{SRC_DIR}/inp.txt"
+OUTFILE = f"{SRC_DIR}/out.txt"
+IMG_PATH = "report/images"
+CC = "g++"
+EXE = ".\\a.exe" # "./a.out" for Linux
+METHODS = ["chunk", "mixed", "dynamic"]
+LIBRARIES = ["pthreads", "omp"]
+RUNS = 5
+SIZES = [1000, 2000, 3000, 4000, 5000]
+THREADS = [1, 2, 4, 8, 16, 32]
+SPARSITIES = [20, 40, 60, 80]
+ROW_INCREMENTS = [10, 20, 30, 40, 50]
+
+def create_input_file(N: int, S: int, K: int, row_inc: int, mat_file: str) -> int:
+    '''
+    Function to create an input file with the given parameters.
+    
+    #### Parameters
+    - N : Number of rows of the matrix.
+    - S : Sparsity (in percent) of the matrix.
+    - K : Number of threads to run.
+    - row_inc : Row increment (for dynamic techniques).
+    - mat_file : File containing the matrix.
+    - out_file : File to output the full input file.
+    
+    #### Returns
+    0 on success.
+    '''
+    L = []
+    with open(mat_file, 'r') as infile:
+        L = infile.readlines()
+    with open(INFILE, 'w') as outfile:
+        outfile.write(f'{N} {S} {K} {row_inc}\n')
+        outfile.writelines(L)
+    return 0
+
+def compile_source(src: str = "main.cpp", flags: list[str] = ["-O3", "-std=c++20", "-lpthread", "-fopenmp"]):
+    subprocess.run([CC, src] + flags, cwd=SRC_DIR, shell=True)
+
+def run_source(exe: str, flags: list[str]):
+    subprocess.run([exe] + flags, cwd=SRC_DIR, shell=True)
+
+def get_total_runtime() -> int:
+    with open(OUTFILE, "r") as fh:
+        L = fh.readlines()
+        return int(L[0].split()[-2])
+
+def run_exp_1(S: int, K: int, row_inc: int):
+    plt.clf()
+    # Compile the source file
+    compile_source()
+    L = [[[0.0 for _ in range(len(SIZES))] for _ in range(len(METHODS))] for _ in range(len(LIBRARIES))]
+    for k, N in enumerate(SIZES):
+        # Create suitable input file
+        create_input_file(N, S, K, row_inc, f"inputs/exp1/{N}-{S}.txt")
+        for i, lib in enumerate(LIBRARIES):
+            for j, method in enumerate(METHODS):
+                for _ in range(2 * RUNS):
+                    # Run source file
+                    run_source(EXE, ["-t", method, "-l", lib])
+                    L[i][j][k] += get_total_runtime()
+                L[i][j][k] /= RUNS
+    for i, lib in enumerate(LIBRARIES):
+        for j, method in enumerate(METHODS): 
+            plt.plot(SIZES, L[i][j], label=f'{method}-{lib}')
+    plt.legend()
+    plt.grid()
+    plt.ylabel('Time (ms)')
+    plt.xlabel('Size')
+    plt.title(f'Time vs. Size N (S = {S}%, K = {K}, rowInc = {row_inc})')
+    plt.tight_layout()
+    plt.savefig(f'{IMG_PATH}/exp1.png')
+
+def run_exp_2(N: int, S: int, row_inc: int):
+    plt.clf()
+    # Compile the source file
+    compile_source()
+    L = [[[0.0 for _ in range(len(THREADS))] for _ in range(len(METHODS))] for _ in range(len(LIBRARIES))]
+    for k, K in enumerate(THREADS):
+        # Create suitable input file
+        create_input_file(N, S, K, row_inc, f"inputs/exp2/{N}-{S}.txt")
+        for i, lib in enumerate(LIBRARIES):
+            for j, method in enumerate(METHODS):
+                for _ in range(RUNS):
+                    # Run source file
+                    run_source(EXE, ["-t", method, "-l", lib])
+                    L[i][j][k] += get_total_runtime()
+                L[i][j][k] /= RUNS
+    for i, lib in enumerate(LIBRARIES):
+        for j, method in enumerate(METHODS): 
+            plt.plot(THREADS, L[i][j], label=f'{method}-{lib}')
+    plt.legend()
+    plt.grid()
+    plt.ylabel('Time (ms)')
+    plt.xlabel('Number of threads')
+    plt.title(f'Time vs. Number of Threads K (N = {N}, S = {S}%, rowInc = {row_inc})')
+    plt.tight_layout()
+    plt.savefig(f'{IMG_PATH}/exp2.png')
+
+def run_exp_3(N: int, K: int, row_inc: int):
+    plt.clf()
+    # Compile the source file
+    compile_source()
+    L = [[[0.0 for _ in range(len(SPARSITIES))] for _ in range(len(METHODS))] for _ in range(len(LIBRARIES))]
+    for k, S in enumerate(SPARSITIES):
+        # Create suitable input file
+        create_input_file(N, S, K, row_inc, f"inputs/exp3/{N}-{S}.txt")
+        for i, lib in enumerate(LIBRARIES):
+            for j, method in enumerate(METHODS):
+                for _ in range(2 * RUNS):
+                    # Run source file
+                    run_source(EXE, ["-t", method, "-l", lib])
+                    L[i][j][k] += get_total_runtime()
+                L[i][j][k] /= RUNS
+    for i, lib in enumerate(LIBRARIES):
+        for j, method in enumerate(METHODS): 
+            plt.plot(SPARSITIES, L[i][j], label=f'{method}-{lib}')
+    plt.legend()
+    plt.grid()
+    plt.ylabel('Time (ms)')
+    plt.xlabel('Sparsity (%)')
+    plt.title(f'Time vs. Sparsity S (N = {N}, K = {K}, rowInc = {row_inc})')
+    plt.tight_layout()
+    plt.savefig(f'{IMG_PATH}/exp3.png')
+
+def run_exp_4(N: int, S: int, K: int):
+    plt.clf()
+    # Compile the source file
+    compile_source()
+    L = [[[0.0 for _ in range(len(ROW_INCREMENTS))] for _ in range(len(METHODS[-1:]))] for _ in range(len(LIBRARIES))]
+    for k, row_inc in enumerate(ROW_INCREMENTS):
+        # Create suitable input file
+        create_input_file(N, S, K, row_inc, f"inputs/exp4/{N}-{S}.txt")
+        for i, lib in enumerate(LIBRARIES):
+            for j, method in enumerate(METHODS[-1:]):
+                for _ in range(RUNS):
+                    # Run source file
+                    run_source(EXE, ["-t", method, "-l", lib])
+                    L[i][j][k] += get_total_runtime()
+                L[i][j][k] /= RUNS
+    for i, lib in enumerate(LIBRARIES):
+        for j, method in enumerate(METHODS[-1:]):
+            plt.plot(ROW_INCREMENTS, L[i][j], label=f'{method}-{lib}')
+    plt.legend()
+    plt.grid()
+    plt.ylabel('Time (ms)')
+    plt.xlabel('Row increment')
+    plt.title(f'Time vs. Row Increment rowInc (N = {N}, K = {K}, S = {S}%)')
+    plt.tight_layout()
+    plt.savefig(f'{IMG_PATH}/exp4.png')
+
+if sys.argv[1] == "exp1":
+    run_exp_1(40, 16, 50)
+if sys.argv[1] == "exp2":
+    run_exp_2(5000, 40, 50)
+if sys.argv[1] == "exp3":
+    run_exp_3(5000, 16, 50)
+if sys.argv[1] == "exp4":
+    run_exp_4(5000, 40, 16)
