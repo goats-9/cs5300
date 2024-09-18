@@ -16,6 +16,7 @@ In particular, to run the implementation, type the following command.
 
     ./a.out -t <TECHNIQUE> -l <LIBRARY>
 
-Here, <TECHNIQUE> can be any of "chunk", "mixed" or "dynamic" and <LIBRARY> can be any of "pthreads" or "omp".
+Here, <TECHNIQUE> can be any of "chunk", "mixed" or "dynamic" and <LIBRARY> can
+be any of "pthreads" or "omp".
 
 Don't forget to provide the input file "inp.txt".
