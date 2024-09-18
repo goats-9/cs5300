@@ -9,6 +9,7 @@ Purpose : Run tests and generate plots for report
 
 # Imports
 import subprocess
+import sys
 import matplotlib.pyplot as plt
 
 # Constants
@@ -165,7 +166,11 @@ def run_exp_4(src_list: list[str] = SRC_LIST, n: int = 16, lambda_1: float = LAM
     plt.tight_layout()
     plt.savefig(f'{IMG_PATH}/exp4.png')  
 
-run_exp_1()
-run_exp_2()
-run_exp_3()
-run_exp_4()
+if sys.argv[1] == "1":
+    run_exp_1()
+elif sys.argv[1] == "2":
+    run_exp_2()
+elif sys.argv[1] == "3":
+    run_exp_3()
+elif sys.argv[1] == "4":
+    run_exp_4()
