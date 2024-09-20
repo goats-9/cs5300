@@ -111,6 +111,15 @@ void testCS(int id, BakeryLock &lock, std::stringstream &log) {
 int main() {
     // Set up file IO streams
     std::fstream fin(INFILE, std::fstream::in), fout(OUTFILE, std::fstream::out);
+    // Ensure the filestreams are created
+    if (!fin) {
+        std::cout << "[ERROR] Input file " << INFILE << " not found.\n";
+        return 1;
+    }
+    if (!fout) {
+        std::cout << "[ERROR] Output file " << OUTFILE << " not created.\n";
+        return 1;
+    }
     // Read parameters
     fin >> n >> k >> lambda_1 >> lambda_2;
     // Set up distributions and random number generator

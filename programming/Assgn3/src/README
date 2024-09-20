@@ -1,0 +1,13 @@
+This zip archive contains C++ source code for performance evaluation of the
+Filter Lock and the Bakery Lock. Compile the source code with the command
+
+    g++ -O3 -std=c++20 <lock>-CS21BTECH11018.cpp
+
+where <lock> can be either of "Bakery" or "Filter".
+
+Run the executable using the command
+
+    ./a.out
+
+Be sure to include the input file "inp-params.txt" in the same directory as the
+source code.
