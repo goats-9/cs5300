@@ -21,7 +21,7 @@ INPUT_FILE = "inp-params.txt"
 OUTPUT_FILE = "out.txt"
 NUM_THREADS = [2, 4, 8, 16, 32, 64]
 NUM_REQS = [5, 10, 15, 20, 25]
-NUM_RUNS = 5
+NUM_RUNS = 20
 LAMBDA_1 = 1
 LAMBDA_2 = 2
 UNITS_PER_MS = 1e6
@@ -130,7 +130,7 @@ def run_exp_3(src_list: list[str] = SRC_LIST, k: int = 10, lambda_1: float = LAM
                 L[i] += get_worst_entry_time()
             L[i] /= NUM_RUNS
         plt.plot(NUM_THREADS, L, label=f'{src.split('.')[0]}-worst')
-    plt.title(f'Entry Time vs. Threads (k={k}, $\\lambda_1={lambda_1}$, $\\lambda_2={lambda_2}$)')
+    plt.title(f'Entry Time vs. Threads ($k={k}$, $\\lambda_1={lambda_1}$, $\\lambda_2={lambda_2}$)')
     plt.ylabel(f'Entry time (ms)')
     plt.xlabel(f'Number of Threads $n$')
     plt.legend()
@@ -158,7 +158,7 @@ def run_exp_4(src_list: list[str] = SRC_LIST, n: int = 16, lambda_1: float = LAM
                 L[i] += get_worst_entry_time()
             L[i] /= NUM_RUNS
         plt.plot(NUM_REQS, L, label=f'{src.split('.')[0]}-worst')
-    plt.title(f'Entry Time vs. CS Requests (n={n}, $\\lambda_1={lambda_1}$, $\\lambda_2={lambda_2}$)')
+    plt.title(f'Entry Time vs. CS Requests ($n={n}$, $\\lambda_1={lambda_1}$, $\\lambda_2={lambda_2}$)')
     plt.ylabel(f'Entry time (ms)')
     plt.xlabel(f'Number of Critical Section Requests $k$')
     plt.legend()
@@ -173,4 +173,9 @@ elif sys.argv[1] == "2":
 elif sys.argv[1] == "3":
     run_exp_3()
 elif sys.argv[1] == "4":
+    run_exp_4()
+else:
+    run_exp_1()
+    run_exp_2()
+    run_exp_3()
     run_exp_4()

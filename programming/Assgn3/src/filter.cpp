@@ -34,13 +34,10 @@ private:
     std::vector<size_t> victim;  /// Victim at each level
 public:
     /**
-     * @brief Constructor method for BakeryLock
+     * @brief Constructor method for FilterLock
      * @param N Number of threads
      */
-    FilterLock(size_t _n) : n(_n) {
-        level.assign(n, 0);
-        victim.assign(n, -1);
-    }
+    FilterLock(size_t _n) : n(_n), level(n, 0), victim(n, -1) {}
 
     /**
      * @brief Method to acquire FilterLock
@@ -58,7 +55,7 @@ public:
     }
 
     /**
-     * @brief Method to release BakeryLock
+     * @brief Method to release FilterLock
      * @param id Thread ID
      */
     void unlock(int id) {
@@ -92,19 +89,19 @@ void testCS(int id, FilterLock &lock, std::stringstream &log) {
         lock.lock(id);
         // Log CS entry
         log << "CS Entry " << i + 1 << " at "
-        << (std::chrono::system_clock::now() - start).count() 
+        << (std::chrono::system_clock::now() - start).count()
         << " ns by thread " << id + 1 << '\n';
         // Sleep in CS
         std::this_thread::sleep_for(std::chrono::milliseconds((int)exp_dist_1(gen)));
         // Log CS exit request
         log << "CS Exit Request " << i + 1 << " at "
-        << (std::chrono::system_clock::now() - start).count() 
+        << (std::chrono::system_clock::now() - start).count()
         << " ns by thread " << id + 1 << '\n';
         // Release lock
         lock.unlock(id);
         // Log CS exit
         log << "CS Exit " << i + 1 << " at "
-        << (std::chrono::system_clock::now() - start).count() 
+        << (std::chrono::system_clock::now() - start).count()
         << " ns by thread " << id + 1 << '\n';
         // Wait before next entry
         std::this_thread::sleep_for(std::chrono::milliseconds((int)exp_dist_2(gen)));

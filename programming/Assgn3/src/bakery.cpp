@@ -37,10 +37,7 @@ public:
      * @brief Constructor method for BakeryLock
      * @param N Number of threads
      */
-    BakeryLock(size_t _n) : n(_n) {
-        flag.assign(n, false);
-        label.assign(n, 0);
-    }
+    BakeryLock(size_t _n) : n(_n), flag(n, false), label(n, 0) {}
 
     /**
      * @brief Method to acquire BakeryLock
@@ -92,19 +89,19 @@ void testCS(int id, BakeryLock &lock, std::stringstream &log) {
         lock.lock(id);
         // Log CS entry
         log << "CS Entry " << i + 1 << " at "
-        << (std::chrono::system_clock::now() - start).count() 
+        << (std::chrono::system_clock::now() - start).count()
         << " ns by thread " << id + 1 << '\n';
         // Sleep in CS
         std::this_thread::sleep_for(std::chrono::milliseconds((int)exp_dist_1(gen)));
         // Log CS exit request
         log << "CS Exit Request " << i + 1 << " at "
-        << (std::chrono::system_clock::now() - start).count() 
+        << (std::chrono::system_clock::now() - start).count()
         << " ns by thread " << id + 1 << '\n';
         // Release lock
         lock.unlock(id);
         // Log CS exit
         log << "CS Exit " << i + 1 << " at "
-        << (std::chrono::system_clock::now() - start).count() 
+        << (std::chrono::system_clock::now() - start).count()
         << " ns by thread " << id + 1 << '\n';
         // Wait before next entry
         std::this_thread::sleep_for(std::chrono::milliseconds((int)exp_dist_2(gen)));
