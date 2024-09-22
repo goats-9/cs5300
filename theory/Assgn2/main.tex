@@ -14,41 +14,50 @@
     any \texttt{write()} call to its location, then this call will return the
     most recently written value into \texttt{s\_table[\(A\)]}. If it does, then
     it will return the new value or the old value since the component registers
-    are regular. Thus, the construction yields a regular Boolean MRSW register.
+    are regular, which is acceptable. Thus, the construction yields a regular
+    Boolean MRSW register.
 
     \item \textbf{True.} Since the SRSW registers are regular, no read call can
     return a value from either the future or the distant past. We only need to
-    check if an earlier read can return a value later than that returned by a
-    later read. Since the SRSW registers are regular, this can only happen when
-    reads overlap a single write.
+    check if it is possible that \(R^i \rightarrow R^j\) and \(R^i\) returns a
+    value later than the value returned by \(R^j\). Since the SRSW registers are
+    regular, this can only happen when both reads overlap a single write.
     
-    Suppose an earlier read returns the old value. Then, the later read can
-    return either the old or new value, depending on whether the diagonal entry
-    for that thread has been updated by the writer thread. 
+    Suppose \(R^i\) returns the old value. Then, \(R^j\) can return either the
+    old or new value, depending on whether the diagonal entry for that thread
+    has been updated by the writer thread, which is acceptable. 
     
-    Otherwise, if the earlier read returned the new value, it would have also
-    updated all the values in its column to reflect the newly read value. A
-    later read would then scan its row to find this updated value written by the
-    earlier reader (if not written by the writer thread) and thus return the
-    same value as it has the highest timestamp.
+    Otherwise, if \(R^i\) returned the new value, it would have also updated all
+    the values in its column to reflect the newly read value. Then, \(R^j\)
+    would scan its row to find this updated value written by \(R^i\) (if not
+    written by the writer thread) and thus return the same value as it has the
+    highest timestamp.
+
+    Hence, the given construction still remains atomic even if SRSW regular
+    registers are used.
 
     \item Obviously, the reader thread cannot read values from the future since
     the entry in \texttt{r\_bit} will not be set. Suppose \(W^i \rightarrow
-    W^j\). If the latter value is smaller, then any read following it will read
-    this value. If it is larger, then the earlier read value is wiped out, and a
-    later read will still read the newer value.
+    W^j\), with values \(v_i\) and \(v_j\) being written. If \(v_j \le v_i\),
+    then a read following \(W^j\) will return \(v_j\). If \(v_j > v_i\), then
+    \texttt{r\_bit[\(v_j\)]} is set and \texttt{r\_bit[\(v_i\)]} is unset, so a
+    read after \(W^j\) will return \(v_j\).
     
-    Now, we need to prove that a later read returns a value later than the
-    earlier read. If both reads do not overlap with a write, then the later read
-    cannot contain an earlier value. If they overlap with a write and the
-    earlier read reads the new value, the later read returns the same value
-    since the array of registers is atomic, thus the same boolean value at the
-    same array location will be read by the later read. 
+    Suppose \(R^i \rightarrow R^j\), and \(R^i\) returns \(v_i\). Then, the
+    first index with a set bit in \texttt{r\_bit} is \(v_i\). If no writes
+    overlap with both these reads, then \(R^j\) will return \(v_i\) or a newly
+    written value whose write overlaps only with \(R^j\). Now, suppose a write
+    \(W\) overlaps with both reads and writes a value \(v_j\). If \(R^i\)
+    returns \(v_j\), it must mean that \(v_j\) is the smallest index with a set
+    bit in \texttt{r\_bit}. Hence, \(R^j\) will also return \(v_j\).
+
+    This analysis shows that the given construction is an atmoic MRSW register.
 
     \item Clearly, this construction guarantees a safe register, since the
     returned value is also a 64-bit value. However, if a read operation overlaps
     with a write operation, then it can read the new upper 32 bits and the old
-    lower 32 bits. This is neither characteristic of regular or safe registers.
-    Thus, the strongest property satisfied is a safe register.
+    lower 32 bits. This is characteristic of neither regular nor atomic
+    registers. Thus, the strongest property satisfied by this construction is
+    that of a safe register.
 \end{enumerate}
 \end{document}
