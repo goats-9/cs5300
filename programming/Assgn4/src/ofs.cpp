@@ -54,6 +54,7 @@ thread_local uint16_t sn = 0;
 
 /**
  * @class Implementation of obstruction-free MRMW snapshot interface.
+ * @param m Size of the shared array.
  */
 template<typename T>
 class OFSnapshot {
@@ -62,6 +63,11 @@ private:
 public:
     OFSnapshot(int m) : shArr(m) { for (P<T> &u : shArr) u = std::make_unique<A<T>>(0); }
     
+    /**
+     * @brief Set the value at memory location `l` to `v`.
+     * @param l Location whose value is to be updated.
+     * @param v New value to be inserted at location `l`.
+     */
     void update(int l, T v) {
         // Get thread id
         uint16_t tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
@@ -69,21 +75,36 @@ public:
         *shArr[l] = StampedValue<T>(v, ++sn, tid);
     }
 
+    /**
+     * @brief Helper function to collect the contents of the shared array.
+     * @return Array of stamped values representing the contents of the shared
+     * array.
+     */
     std::vector<StampedValue<T>> collect() {
         std::vector<StampedValue<T>> copy;
         for (auto &u : shArr) copy.push_back(*u);
         return copy;
     }
 
+    /**
+     * @brief Return a linearizable snapshot of the shared array.
+     * @return Snapshot consisting of the values stored in the shared array
+     * which is linearizable within the interval of this function.
+     */
     std::vector<T> snapshot() {
         std::vector<StampedValue<T>> oldCopy, newCopy;
+        // Perform initial collect
         oldCopy = collect();
         while (true) {
+            // Second collect
             newCopy = collect();
             if (oldCopy != newCopy) {
+                // Swap old and new collects
                 std::swap(oldCopy, newCopy);
+                // Attempt second collect again
                 continue;
             }
+            // We have a clean collect, this is our snapshot
             std::vector<T> ret;
             for (StampedValue<T> u : newCopy) ret.push_back(u.value);
             return ret;
@@ -168,16 +189,20 @@ int main(int argc, char *argv []) {
     std::vector<std::thread> writerThreads(nw), snapshotThreads(ns);
     // Create loggers
     std::vector<std::stringstream> writerLogs(nw), snapshotLogs(ns);
-    // Create WFS object
+    // Create OFS object
     OFSnapshot<uint32_t> snapObj(M);
+    // Start the threads: writer followed by snapshot threads
     for (uint16_t i = 0; i < nw; i++) {
         writerThreads[i] = std::thread{writerThreadRunner<uint32_t>, i, std::ref(snapObj), std::ref(writerLogs[i])};
     }
     for (uint16_t i = 0; i < ns; i++) {
         snapshotThreads[i] = std::thread{snapshotThreadRunner<uint32_t>, i, std::ref(snapObj), std::ref(snapshotLogs[i])};
     }
+    // Join snapshot threads
     for (auto &th : snapshotThreads) th.join();
+    // Tell writer threads to stop
     term = true;
+    // Join writer threads
     for (auto &th : writerThreads) th.join();
     // Write logs to output
     for (auto &lg : writerLogs) fout << lg.str();

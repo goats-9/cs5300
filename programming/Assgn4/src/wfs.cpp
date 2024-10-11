@@ -54,6 +54,7 @@ thread_local uint16_t sn = 0;
 
 /**
  * @class Implementation of wait-free MRMW snapshot interface.
+ * @param m Size of the shared array.
  */
 template<typename T>
 class WFSnapshot {
@@ -61,9 +62,13 @@ private:
     std::vector<P<T>> shArr;
     std::unordered_map<int, std::vector<T>> helpSnap;
 public:
-    WFSnapshot() = default;
     WFSnapshot(int m) : shArr(m) { for (P<T> &u : shArr) u = std::make_unique<A<T>>(0); }
 
+    /**
+     * @brief Set the value at memory location `l` to `v`.
+     * @param l Location whose value is to be updated.
+     * @param v New value to be inserted at location `l`.
+     */
     void update(int l, T v) {
         // Get hashed thread id
         uint16_t tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
@@ -73,32 +78,49 @@ public:
         helpSnap[tid] = snapshot();
     }
 
+    /**
+     * @brief Helper function to collect the contents of the shared array.
+     * @return Array of stamped values representing the contents of the shared
+     * array.
+     */
     std::vector<StampedValue<T>> collect() {
         std::vector<StampedValue<T>> copy;
         for (P<T> &u : shArr) copy.push_back(*u);
         return copy;
     }
 
+    /**
+     * @brief Return a linearizable snapshot of the shared array.
+     * @return Snapshot consisting of the values stored in the shared array
+     * which is linearizable within the interval of this function.
+     */
     std::vector<T> snapshot() {
+        // Maintain a list of threads that moved
         std::unordered_set<uint16_t> can_help;
         std::vector<StampedValue<T>> oldCopy, newCopy;
+        // Perform initial collect
         oldCopy = collect();
         while (true) {
+            // Perform second collect
             newCopy = collect();
             int m = oldCopy.size();
             bool ok = true;
+            // Check if the collects match
             for (int i = 0; i < m; i++) {
                 if (oldCopy[i] != newCopy[i]) {
                     ok = false;
                     uint16_t tid = newCopy[i].id;
-                    if (can_help.count(tid)) return helpSnap[tid];
-                    else can_help.insert(tid);
+                    if (can_help.count(tid)) return helpSnap[tid];  // This thread moved twice
+                    else can_help.insert(tid);  // This thread moved for the first time
                 }
             }
             if (!ok) {
+                // Swap first collect with second collect
                 std::swap(oldCopy, newCopy);
+                // Redo second collect
                 continue;
             }
+            // We have a clean collect
             std::vector<T> ret;
             for (StampedValue<T> u : newCopy) ret.push_back(u.value);
             return ret;
