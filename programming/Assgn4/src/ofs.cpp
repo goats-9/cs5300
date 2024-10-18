@@ -93,7 +93,7 @@ class OFSnapshot {
 private:
     std::vector<P<T>> shArr;
 public:
-    OFSnapshot(int m) : shArr(m) { for (int i = 0; i < m; i++) shArr[i] = std::make_unique<A<T>>(0); }
+    OFSnapshot(int m) : shArr(m) { for (auto &u : shArr) u = std::make_unique<A<T>>(0); }
     
     /**
      * @brief Set the value at memory location `l` to `v`.
@@ -114,7 +114,7 @@ public:
      */
     std::vector<StampedValue<T>> collect() {
         std::vector<StampedValue<T>> copy;
-        for (auto u : shArr) copy.push_back(*u);
+        for (auto &u : shArr) copy.push_back(*u);
         return copy;
     }
 
