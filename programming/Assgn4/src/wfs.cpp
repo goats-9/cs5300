@@ -111,9 +111,7 @@ public:
         // Get hashed thread id
         uint16_t tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
         // Replace memory location with new value.
-        P<T> new_ptr = std::make_unique<A<T>>(StampedValue<T>(v, ++sn, tid));
-        std::swap(new_ptr, shArr[l]);
-        new_ptr.release();
+        shArr[l] = std::make_unique<A<T>>(StampedValue<T>(v, ++sn, tid));
         // Perform snapshot to help others.
         helpSnap[tid] = snapshot();
     }

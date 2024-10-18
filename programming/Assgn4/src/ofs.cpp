@@ -108,9 +108,7 @@ public:
         // Get thread id
         uint16_t tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
         // Replace with pointer to own thread id and sequence number.
-        P<T> new_ptr = std::make_unique<A<T>>(StampedValue<T>(v, ++sn, tid));
-        std::swap(new_ptr, shArr[l]);
-        new_ptr.release();
+        shArr[l] = std::make_unique<A<T>>(StampedValue<T>(v, ++sn, tid));
     }
 
     /**
