@@ -16,12 +16,12 @@ import matplotlib.pyplot as plt
 IMG_PATH = "../report/images"
 CC = "g++"
 SRC_LIST = ["ofs.cpp", "wfs.cpp"]
-EXE = ".\\a.exe" # "./a.out" for Linux
+EXE = "./a.out" # ".\\a.exe" for Windows
 INPUT_FILE = "inp-params.txt"
 OUTPUT_FILE = "out.txt"
 UPDATE_THREAD = "Writer"
 SCAN_THREAD = "Snapshot"
-NUM_THREADS = [4, 8, 16, 32]
+NUM_THREADS = [4, 8, 16, 32, 64]
 FLAG_ARR = [(True, False, "update"), (False, True, "scan"), (True, True, "all")]
 M = 40
 LAMBDA = 0.5
@@ -37,11 +37,10 @@ def create_input_file(nw: int, ns: int, M: int, lambda_w: float, lambda_s: float
         fh.write(f'{nw} {ns} {M} {lambda_w} {lambda_s} {k}')
 
 def compile_source(src: str, flags: list[str] = ["-O3", "-std=c++20"]):
-    output = subprocess.check_output([CC, src] + flags, shell=True)
-    assert not output, f'Error: Exit code {output}'
+    subprocess.run([CC, src] + flags, stdout=subprocess.PIPE)
 
 def run_program():
-    subprocess.run([EXE], shell=True)
+    subprocess.run([EXE,], stdout=subprocess.PIPE)
     
 def get_avg_time(upd: bool, scan: bool) -> float:
     tot, cnt = 0, 0
@@ -75,12 +74,14 @@ def run_exp_1(
     lambda_s: float = LAMBDA,
     k: int = K,
 ):
+    print(f'Running Experiment 1')
     plt.clf()
     for src in src_list:
         compile_source(src)
         alg = src.split('.')[0]
         L = [[0.0] * len(NUM_THREADS) for _ in range(len(FLAG_ARR))]
         for j, n in enumerate(NUM_THREADS):
+            print(f'{src}-{n}')
             ns = n // (1 + ratio)
             nw = ratio * ns
             create_input_file(nw, ns, M, lambda_w, lambda_s, k)
@@ -109,12 +110,14 @@ def run_exp_2(
     lambda_s: float = LAMBDA,
     k: int = K,
 ):
+    print(f'Running Experiment 2')
     plt.clf()
     for src in src_list:
         compile_source(src)
         alg = src.split('.')[0]
         L = [[0.0] * len(NUM_THREADS) for _ in range(len(FLAG_ARR))]
         for j, n in enumerate(NUM_THREADS):
+            print(f'{src}-{n}')
             ns = n // (1 + ratio)
             nw = ratio * ns
             create_input_file(nw, ns, M, lambda_w, lambda_s, k)
@@ -143,12 +146,14 @@ def run_exp_3(
     lambda_s: float = LAMBDA,
     k: int = K,
 ):
+    print(f'Running Experiment 3')
     plt.clf()
     for src in src_list:
         compile_source(src)
         alg = src.split('.')[0]
         L = [[0.0] * len(RATIO) for _ in range(len(FLAG_ARR))]
         for j, ratio in enumerate(RATIO):
+            print(f'{src}-{ratio}')
             nw = ratio * ns
             create_input_file(nw, ns, M, lambda_w, lambda_s, k)
             for _ in range(NUM_RUNS):
@@ -176,12 +181,14 @@ def run_exp_4(
     lambda_s: float = LAMBDA,
     k: int = K,
 ):
+    print(f'Running Experiment 4')
     plt.clf()
     for src in src_list:
         compile_source(src)
         alg = src.split('.')[0]
         L = [[0.0] * len(RATIO) for _ in range(len(FLAG_ARR))]
         for j, ratio in enumerate(RATIO):
+            print(f'{src}-{ratio}')
             nw = ratio * ns
             create_input_file(nw, ns, M, lambda_w, lambda_s, k)
             for _ in range(NUM_RUNS):

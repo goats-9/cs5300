@@ -96,7 +96,7 @@ private:
     std::vector<P<T>> shArr;
     std::unordered_map<int, std::vector<T>> helpSnap;
 public:
-    WFSnapshot(int m) : shArr(m) { for (P<T> &u : shArr) u = std::make_unique<A<T>>(0); }
+    WFSnapshot(int m) : shArr(m) { for (int i = 0; i < m; i++) shArr[i] = std::make_unique<A<T>>(0); }
 
     /**
      * @brief Set the value at memory location `l` to `v`.
@@ -119,7 +119,7 @@ public:
      */
     std::vector<StampedValue<T>> collect() {
         std::vector<StampedValue<T>> copy;
-        for (P<T> &u : shArr) copy.push_back(*u);
+        for (P<T> u : shArr) copy.push_back(*u);
         return copy;
     }
 
