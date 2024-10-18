@@ -5,13 +5,13 @@
  * object. In this application, sleep times for each thread are simulated by
  * exponential delays, with their own averages. 
  *
- * @date 2024-09-16
+ * @date 2024-10-18
  */
 
 // Headers
 #include <iostream>
 #include <fstream>
-#include <sstream>
+#include <iomanip>
 #include <vector>
 #include <chrono>
 #include <algorithm>
@@ -50,6 +50,39 @@ struct StampedValue {
 
 template<class T> using A = std::atomic<StampedValue<T>>;
 template<class T> using P = std::unique_ptr<A<T>>;
+
+/**
+ * @brief A struct containing relevant information carried by a log.
+ */
+struct Log {
+    int id; // Thread id
+    std::chrono::system_clock::time_point tm; // Time point
+    std::string lg; // Log entry
+
+    /**
+     * @brief Constructor function for `Log`.
+     * @param id Thread id
+     * @param tm Time point
+     * @param lg Log entry
+     */
+    Log(int id, std::chrono::system_clock::time_point &tm, std::string &lg) : id(id), tm(tm), lg(lg) {}
+
+    /**
+     * @brief Compares logs using the tuple (tm, id).
+     */
+    bool operator< (const Log& l) const {
+        return std::make_pair(tm, id) < std::make_pair(l.tm, l.id);
+    }
+
+    /**
+     * @brief Output a log entry.
+     */
+    friend std::ostream& operator<< (std::ostream& o, const Log& l) {
+        auto ns = std::chrono::duration_cast<std::chrono::nanoseconds>(l.tm.time_since_epoch()).count() % 1000000000;
+        auto t = std::chrono::system_clock::to_time_t(l.tm);
+        return o << std::put_time(localtime(&t), "[%FT%T") << '.' << ns << "Z] " << l.lg << '\n';
+    }
+};
 
 thread_local uint16_t sn = 0;
 
@@ -147,7 +180,8 @@ const char* OUTFILE = "out.txt";
 // Runner functions
 
 template<class T>
-void writerThreadRunner(uint16_t id, WFSnapshot<T> &snapObj, std::stringstream &log) {
+void writerThreadRunner(uint16_t id, WFSnapshot<T> &snapObj, std::vector<Log> &log) {
+    std::stringstream ss;
     while (!term) {
         // Get l, v
         uint32_t l = locDist(rng);
@@ -157,26 +191,33 @@ void writerThreadRunner(uint16_t id, WFSnapshot<T> &snapObj, std::stringstream &
         snapObj.update(l, v);
         auto writeEnd = std::chrono::system_clock::now();
         // Log write with timestamp
-        log << std::format("[{:%FT%TZ}]", writeEnd) 
-            << " Writer thread " << id << ": shArr[" << l << "] = " << v 
-            << " in " << (writeEnd - writeStart).count() << " ns.\n";
+        ss.str(std::string());
+        ss << "Writer thread " << id << ": shArr[" << l << "] = " << v 
+            << " in " << (writeEnd - writeStart).count() << " ns.";
+        auto s = ss.str();
+        Log lg(id, writeEnd, s);
+        log.push_back(lg);
         // Sleep
         std::this_thread::sleep_for(std::chrono::milliseconds((int)writerSleepDist(rng)));
     }
 }
 
 template<class T>
-void snapshotThreadRunner(uint16_t id, WFSnapshot<T> &snapObj, std::stringstream &log) {
+void snapshotThreadRunner(uint16_t id, WFSnapshot<T> &snapObj, std::vector<Log> &log) {
+    std::stringstream ss;
     for (uint32_t i = 0; i < k; i++) {
         // Do the snapshot
         auto collectStart = std::chrono::system_clock::now();
         std::vector<T> snap = snapObj.snapshot();
         auto collectEnd = std::chrono::system_clock::now();
         // Log snapshot
-        log << std::format("[{:%FT%TZ}]", collectEnd) 
-            << " Snapshot thread " << id << ": collect " << i + 1 << " {";
-        for (uint32_t j = 0; j < M; j++) log << " " << j << ": " << snap[j] << (",}"[j + 1 == M]);
-        log << " in " << (collectEnd - collectStart).count() << " ns.\n";
+        ss.str(std::string());
+        ss << "Snapshot thread " << id << ": collect " << i + 1 << " {";
+        for (uint32_t j = 0; j < M; j++) ss << " " << j << ": " << snap[j] << (",}"[j + 1 == M]);
+        ss << " in " << (collectEnd - collectStart).count() << " ns.";
+        auto s = ss.str();
+        Log lg(id, collectEnd, s);
+        log.push_back(lg);
         // Sleep
         std::this_thread::sleep_for(std::chrono::milliseconds((int)snapshotSleepDist(rng)));
     }
@@ -205,7 +246,7 @@ int main(int argc, char *argv []) {
     // Create threads
     std::vector<std::thread> writerThreads(nw), snapshotThreads(ns);
     // Create loggers
-    std::vector<std::stringstream> writerLogs(nw), snapshotLogs(ns);
+    std::vector<std::vector<Log>> writerLogs(nw, std::vector<Log>()), snapshotLogs(ns, std::vector<Log>());
     // Create WFS object
     WFSnapshot<uint32_t> snapObj(M);
     for (uint16_t i = 0; i < nw; i++) {
@@ -218,7 +259,10 @@ int main(int argc, char *argv []) {
     term = true;
     for (auto &th : writerThreads) th.join();
     // Write logs to output
-    for (auto &lg : writerLogs) fout << lg.str();
-    for (auto &lg : snapshotLogs) fout << lg.str();
+    std::vector<Log> out;
+    for (auto &lg : writerLogs) out.insert(out.end(), lg.begin(), lg.end());
+    for (auto &lg : snapshotLogs) out.insert(out.end(), lg.begin(), lg.end());
+    sort(out.begin(), out.end());
+    for (auto &lg : out) fout << lg;
     return 0;
 }
