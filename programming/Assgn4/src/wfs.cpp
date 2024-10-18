@@ -41,7 +41,7 @@ struct StampedValue {
      * @param ts Timestamp.
      * @param tid Thread id.
      */
-    StampedValue(T val, uint16_t ts = 0, uint16_t tid = 0) : value(val), stamp(ts), id(tid) {}
+    StampedValue(T val, uint16_t ts, uint16_t tid) : value(val), stamp(ts), id(tid) {}
 
     bool operator == (const StampedValue<T> stval) const {
         return value == stval.value and stamp == stval.stamp and id == stval.id;
@@ -100,7 +100,7 @@ private:
     std::vector<P<T>> shArr;
     std::unordered_map<int, std::vector<T>> helpSnap;
 public:
-    WFSnapshot(int m) : shArr(m) { for (auto &u : shArr) u = std::make_unique<A<T>>(0); }
+    WFSnapshot(int m) : shArr(m) { for (auto &u : shArr) u = std::make_unique<A<T>>(StampedValue<T>(0, 0, 0)); }
 
     /**
      * @brief Set the value at memory location `l` to `v`.
@@ -111,7 +111,9 @@ public:
         // Get hashed thread id
         uint16_t tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
         // Replace memory location with new value.
-        shArr[l] = std::make_unique<A<T>>(v, ++sn, tid);
+        P<T> new_ptr = std::make_unique<A<T>>(StampedValue<T>(v, ++sn, tid));
+        std::swap(new_ptr, shArr[l]);
+        new_ptr.release();
         // Perform snapshot to help others.
         helpSnap[tid] = snapshot();
     }

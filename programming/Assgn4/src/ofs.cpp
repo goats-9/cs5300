@@ -97,7 +97,7 @@ class OFSnapshot {
 private:
     std::vector<P<T>> shArr;
 public:
-    OFSnapshot(int m) : shArr(m) { for (auto &u : shArr) u = std::make_unique<A<T>>(0); }
+    OFSnapshot(int m) : shArr(m) { for (auto &u : shArr) u = std::make_unique<A<T>>(StampedValue<T>(0, 0, 0)); }
     
     /**
      * @brief Set the value at memory location `l` to `v`.
@@ -108,7 +108,9 @@ public:
         // Get thread id
         uint16_t tid = std::hash<std::thread::id>{}(std::this_thread::get_id());
         // Replace with pointer to own thread id and sequence number.
-        shArr[l] = std::make_unique<A<T>>(v, ++sn, tid);
+        P<T> new_ptr = std::make_unique<A<T>>(StampedValue<T>(v, ++sn, tid));
+        std::swap(new_ptr, shArr[l]);
+        new_ptr.release();
     }
 
     /**
