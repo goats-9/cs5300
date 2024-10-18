@@ -158,7 +158,11 @@ void snapshotThreadRunner(uint16_t id, OFSnapshot<T> &snapObj, std::stringstream
         // Log snapshot
         log << std::format("[{:%FT%TZ}]", collectEnd) 
             << " Snapshot thread " << id << ": collect " << i + 1 << " {";
-        for (uint32_t j = 0; j < M; j++) log << " " << j << ": " << snap[j] << (",}"[j + 1 == M]);
+        for (uint32_t j = 0; j < M; j++) {
+            log << " " << j << ": " << snap[j];
+            if (j + 1 == M) log << "}";
+            else log << ",";
+        }
         log << " in " << (collectEnd - collectStart).count() << " ns.\n";
         // Sleep
         std::this_thread::sleep_for(std::chrono::milliseconds((int)snapshotSleepDist(rng)));
