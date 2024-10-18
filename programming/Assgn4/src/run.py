@@ -36,7 +36,7 @@ def create_input_file(nw: int, ns: int, M: int, lambda_w: float, lambda_s: float
     with open(INPUT_FILE, "w") as fh:
         fh.write(f'{nw} {ns} {M} {lambda_w} {lambda_s} {k}')
 
-def compile_source(src: str, flags: list[str] = ["-O3", "-std=c++20"]):
+def compile_source(src: str, flags: list[str] = ["-O3", "-std=c++17", "-pthread"]):
     subprocess.run([CC, src] + flags, stdout=subprocess.PIPE)
 
 def run_program():
