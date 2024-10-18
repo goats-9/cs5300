@@ -44,6 +44,10 @@ struct StampedValue {
     bool operator == (const StampedValue<T> stval) const {
         return value == stval.value and stamp == stval.stamp and id == stval.id;
     }
+
+    bool operator != (const StampedValue<T> stval) const {
+        return !(*this == stval);
+    }
 };
 
 template<class T> using A = std::atomic<StampedValue<T>>;
