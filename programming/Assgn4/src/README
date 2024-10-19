@@ -2,7 +2,7 @@ This zip archive contains C++ source code for performance evaluation of the
 obstruction-free and wait-free snapshot algorithms. Compile the source code with
 the command
 
-    g++ -O3 -std=c++20 <alg>-CS21BTECH11018.cpp
+    g++ -O2 -std=c++17 -pthread <alg>-CS21BTECH11018.cpp
 
 where <alg> can be either of "ofs" or "wfs".
 
@@ -11,4 +11,6 @@ Run the executable using the command
     ./a.out
 
 Be sure to include the input file "inp-params.txt" in the same directory as the
-source code.
+source code. To run the executable via SLURM, use the command
+
+    srun -p cse-cpu-all ./a.out

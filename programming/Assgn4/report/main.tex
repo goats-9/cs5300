@@ -125,8 +125,8 @@ This random number generator is seeded using the current time since epoch.
 
 In this section, we analyze the performance of the snapshot algorithms on
 metrics such as scalability and impact of constant updates on snapshot in the
-average case and the worst case. This application was run on an Intel i9-11900H
-processor.
+average case and the worst case. This application was run on the CSE servers in
+IITH.
 
 \subsection{Scalability}
 \label{subsec:scalability}
@@ -153,21 +153,17 @@ scalability of the algorithms are given in \autoref{fig:exp1} and
 
 We observe the following.
 \begin{enumerate}
-    \item In the average and worst case, the obstruction-free snapshot is
-    approximately 4-5 times faster and more scalable than the wait-free
-    snapshot.
-    \item In the average and worst case, the update operation of the
-    obstruction-free snapshot takes constant time while the update operation for
-    the wait-free snapshot increases linearly with the number of threads. For
-    both algorithms, the snapshot operation increases linearly with time.
+    \item In the average and worst case, the obstruction-free snapshot is faster
+    and more scalable than the wait-free snapshot.
+    \item In the worst case, both snapshot algorithms exhibit a worst-case
+    running time approximately linear with the total number of threads.
     \item The gap between the times taken for the update and snapshot operation
     is huge for the obstruction-free snapshot and small for the wait-free
-    snapshot. In fact, the update operation takes longer for the wait-free
-    snapshot for a larger number of threads.
+    snapshot in the average case.
     \item The reason for poor performance and scalability of the wait-free
     snapshot is because of the fact that update threads have to perform a
-    snapshot as well to ensure wait-free guarantees, which is not the case in
-    the obstruction-free snapshot.
+    snapshot as well to ensure wait-freedom, which is not the case for the
+    obstruction-free snapshot.
 \end{enumerate}
 
 \subsection{Impact of Update on Scan}
@@ -195,25 +191,25 @@ of update to scan threads. The average and worst case analysis are shown in
 
 We observe the following.
 \begin{enumerate}
-    \item For the wait-free implementation, the average and worst case runtimes
-    for each operation increases with the ratio \(\frac{n_w}{n_s}\). The runtime
-    remains constant for the obstruction-free snapshot.
-    \item For the obstruction-free snapshot, snapshot operation is a bottleneck,
-    but for the wait-free snapshot, update operation is a bottleneck (since a
-    snapshot operation is also performed).
-    \item Though there are no wait-free guarantees for the obstruction-free
-    snapshot, it proves to be faster in practice due to the lightweight update
-    operation. Another reason for no obstruction is probably due to the
-    exponential sleep time.
+    \item The wait-free scan is only marginally faster than the obstruction-free
+    scan in both the average case and worst case. A reason for that could be the
+    exponential sleep time that prevents the scan from being obstructed.
+    \item In this setting, due to the larger number of update threads, the
+    update threads are the bottleneck for both algorithms.
+    \item Here, the wait-free snapshot performs better with larger number of
+    update threads since there is more chance for update threads to move. This
+    makes the obstruction-free algorithm slower.
 \end{enumerate}
 
 \section{Conclusion}
 \label{sec:conclusion}
 
 From the analysis, we conclude that even though there are no wait-free
-guarantees, the obstruction-free snapshot algorithm performs much better than
-the wait-free snapshot algorithm. This might be due to smaller size of the
-shared array. An analysis with a larger shared array may be required to fully
-assess the speed of the obstruction-free snapshot algorithm in practice.
+guarantees, the obstruction-free snapshot algorithm seems to scale better than
+the wait-free snapshot algorithm. However, if there is a larger proportion of
+update threads, then the wait-free snapshot performs better. An analysis with a
+larger shared array may be required to fully assess the speed of the
+obstruction-free snapshot algorithm in practice since the runtimes of both
+algorithms are comparable.
 
 \end{document}
