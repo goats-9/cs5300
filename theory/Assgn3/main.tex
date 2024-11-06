@@ -1,0 +1,82 @@
+\documentclass[conference,compsoc,onecolumn]{IEEEtran}
+\usepackage{./macros}
+
+\begin{document}
+\vspace{3cm}
+\title{CS5300 Theory Assignment 3}
+\author{Gautam Singh\\CS21BTECH11018}
+\maketitle
+
+\bigskip
+
+\begin{enumerate}
+    \item Suppose thread \(A\) acquires and releases this lock. Here, thread
+    \(A\)'s own node is referenced by both \texttt{tail} and \texttt{myNode}.
+    Now, when \(A\) tries to acquire the lock once again, the following happens.
+    \begin{enumerate}
+        \item Thread \(A\) sets it's \texttt{locked} field to \texttt{true} in
+        line 8.
+        \item Thread \(A\) swaps \texttt{tail} with \texttt{qnode} in line 10,
+        but obtains its thread-local node again. In other words, \(A\) becomes
+        its own predecessor.
+        \item Thread \(A\) then spins on \texttt{pred.locked} which corresponds
+        to the \texttt{locked} field in its own memory. In other words, thread
+        \(A\) deadlocks itself.
+    \end{enumerate}
+
+    On the other hand, the MCS lock sets the tail node of the queue to
+    \texttt{null} if there are no further threads waiting in the queue to
+    signify the queue is empty. In this way, the thread reclaims its memory and
+    does not deadlock itself.
+
+    \item Here are the implementations of \texttt{isLocked()} for various types
+    of locks.
+    \begin{enumerate}
+        \item A test-and-set lock is acquired if the atomic boolean variable
+        \texttt{state} is set, which is shown in \autoref{code:tas-islocked}.
+
+        \item A CLH lock is acquired when the \texttt{locked} field of the tail
+        of the queue is set. Thus, we can simply check that to infer whether the
+        lock is acquired. This is shown in \autoref{code:clh-islocked}.
+
+        \item An MCS lock is acquired when the \texttt{tail} of the queue is set
+        and its \texttt{locked} field is also set. Thus, we obtain a reference
+        to the tail and check these two conditions. This is depicted in
+        \autoref{code:mcs-islocked}.
+    \end{enumerate}
+
+    \inputminted[breaklines,linenos,breaksymbolleft=]{java}{codes/TASLock.java}
+    \captionof{listing}{Implementation of \texttt{isLocked} for \texttt{TASLock}. \label{code:tas-islocked}}
+
+    \inputminted[breaklines,linenos,breaksymbolleft=]{java}{codes/CLHLock.java}
+    \captionof{listing}{Implementation of \texttt{isLocked} for \texttt{CLHLock}. \label{code:clh-islocked}}
+
+    \inputminted[breaklines,linenos,breaksymbolleft=]{java}{codes/MCSLock.java}
+    \captionof{listing}{Implementation of \texttt{isLocked} for \texttt{MCSLock}. \label{code:mcs-islocked}}
+
+    \item The implementation of a "nested" readers-writers lock is shown in
+    \autoref{code:nested}.
+    \inputminted[breaklines,linenos,breaksymbolleft=]{java}{codes/NestedReadWriteLock.java}
+    \captionof{listing}{Implementation of nested readers-writers lock.\label{code:nested}}
+
+    To argue correctness of the lock, observe the following.
+
+    \begin{enumerate}
+        \item Suppose a thread holds the write lock. Then, it must have acquired
+        the read lock as well and was the only reader in the system. Another
+        thread looking to acquire the read lock must wait on the condition in
+        line 46 of \autoref{code:nested} since there is a writer thread. Since
+        it cannot acquire the read lock, it definitely cannot acquire the write
+        lock. Thus, the writer thread has exclusive write access.
+
+        \item Suppose a thread holds the read lock. Then, any other thread
+        looking to acquire the write lock will first acquire the read lock, but
+        will then wait on the condition in line 46 of \autoref{code:nested}
+        since there are at least two reader threads.
+    \end{enumerate}
+
+    This implementation is fair for the writers due to the FIFO re-entrant lock
+    used in acquiring the read and write locks. All writers will eventually
+    acquire the write lock.
+\end{enumerate}
+\end{document}
