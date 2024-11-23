@@ -1,0 +1,406 @@
+% Add required packages here
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{tkz-euclide}
+\usepackage{bm}
+\usepackage[breaklinks=true]{hyperref}
+\usetikzlibrary{arrows.meta,shapes,trees,automata,positioning,calc}
+\usepackage{algorithm}
+\usepackage[indLines=false]{algpseudocodex}
+\usepackage{minted}
+\usepackage{caption}
+\usepackage{tabularx}
+\bibliographystyle{IEEEtran}
+
+% Add required macros here
+\renewcommand{\listingscaption}{Code}
+\providecommand*{\listingautorefname}{Code}
+\renewcommand\tabularxcolumn[1]{m{#1}}% for vertical centering text in X column
+\newcolumntype{Y}{>{\centering\arraybackslash}X}
+
+% Use these for theorems, lemmas, proofs, etc.
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{problem}{Problem}
+\newtheorem{proposition}{Proposition}[section]
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{example}{Example}[section]
+\newtheorem{definition}{Definition}
+\newcommand{\definitionautorefname}{Definition}
+\newcommand{\lemmaautorefname}{Lemma}
+\newcommand{\algorithmautorefname}{Algorithm}
+
+% Math-related macros
+\newcommand\vect[1]{\boldsymbol{\mathbf{#1}}}
+\providecommand{\pr}[1]{\ensuremath{\Pr\left(#1\right)}}
+\providecommand{\qfunc}[1]{\ensuremath{Q\left(#1\right)}}
+\providecommand{\sbrak}[1]{\ensuremath{{}\left[#1\right]}}
+\providecommand{\lsbrak}[1]{\ensuremath{{}\left[#1\right.}}
+\providecommand{\rsbrak}[1]{\ensuremath{{}\left.#1\right]}}
+\providecommand{\brak}[1]{\ensuremath{\left(#1\right)}}
+\providecommand{\lbrak}[1]{\ensuremath{\left(#1\right.}}
+\providecommand{\rbrak}[1]{\ensuremath{\left.#1\right)}}
+\providecommand{\cbrak}[1]{\ensuremath{\left\{#1\right\}}}
+\providecommand{\lcbrak}[1]{\ensuremath{\left\{#1\right.}}
+\providecommand{\rcbrak}[1]{\ensuremath{\left.#1\right\}}}
+\providecommand{\ceil}[1]{\ensuremath{\left\lceil#1\right\rceil}}
+\newcommand{\sgn}{\mathop{\mathrm{sgn}}}
+\providecommand{\abs}[1]{\left\vert#1\right\vert}
+\providecommand{\res}[1]{\Res\displaylimits_{#1}} 
+\providecommand{\norm}[1]{\left\lVert#1\right\rVert}
+\providecommand{\mtx}[1]{\mathbf{#1}}
+\providecommand{\mean}[1]{\mathbb{E}\left[ #1 \right]}   
+\providecommand{\system}[1]{\overset{\mathcal{#1}}{ \longleftrightarrow}}
+\newcommand{\cosec}{\,\text{cosec}\,}
+\providecommand{\dec}[2]{\ensuremath{\overset{#1}{\underset{#2}{\gtrless}}}}
+\newcommand{\myvec}[1]{\ensuremath{\begin{pmatrix}#1\end{pmatrix}}}
+\newcommand{\mydet}[1]{\ensuremath{\begin{vmatrix}#1\end{vmatrix}}}
+\renewcommand{\vec}[1]{\boldsymbol{\mathbf{#1}}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\cov}{\mathrm{Cov}}
+\newcommand{\vnmse}{\mathrm{vNMSE}}
+\newcommand{\nmse}{\mathrm{NMSE}}
+\newcommand{\diff}[1]{\frac{d}{d #1}}
+\newcommand{\pdiff}[1]{\frac{\partial}{\partial #1}}
+
+% Math font letters
+\newcommand{\bA}{\mathbb A}
+\newcommand{\bB}{\mathbb B}
+\newcommand{\bC}{\mathbb C}
+\newcommand{\bD}{\mathbb D}
+\newcommand{\bE}{\mathbb E}
+\newcommand{\bF}{\mathbb F}
+\newcommand{\bG}{\mathbb G}
+\newcommand{\bH}{\mathbb H}
+\newcommand{\bI}{\mathbb I}
+\newcommand{\bJ}{\mathbb J}
+\newcommand{\bK}{\mathbb K}
+\newcommand{\bL}{\mathbb L}
+\newcommand{\bM}{\mathbb M}
+\newcommand{\bN}{\mathbb N}
+\newcommand{\bO}{\mathbb O}
+\newcommand{\bP}{\mathbb P}
+\newcommand{\bQ}{\mathbb Q}
+\newcommand{\bR}{\mathbb R}
+\newcommand{\bS}{\mathbb S}
+\newcommand{\bT}{\mathbb T}
+\newcommand{\bU}{\mathbb U}
+\newcommand{\bV}{\mathbb V}
+\newcommand{\bW}{\mathbb W}
+\newcommand{\bX}{\mathbb X}
+\newcommand{\bY}{\mathbb Y}
+\newcommand{\bZ}{\mathbb Z}
+
+\newcommand{\bfa}{\mathbf a}
+\newcommand{\bfb}{\mathbf b}
+\newcommand{\bfc}{\mathbf c}
+\newcommand{\bfd}{\mathbf d}
+\newcommand{\bfe}{\mathbf e}
+\newcommand{\bff}{\mathbf f}
+\newcommand{\bfg}{\mathbf g}
+\newcommand{\bfh}{\mathbf h}
+\newcommand{\bfi}{\mathbf i}
+\newcommand{\bfj}{\mathbf j}
+\newcommand{\bfk}{\mathbf k}
+\newcommand{\bfl}{\mathbf l}
+\newcommand{\bfm}{\mathbf m}
+\newcommand{\bfn}{\mathbf n}
+\newcommand{\bfo}{\mathbf o}
+\newcommand{\bfp}{\mathbf p}
+\newcommand{\bfq}{\mathbf q}
+\newcommand{\bfr}{\mathbf r}
+\newcommand{\bfs}{\mathbf s}
+\newcommand{\bft}{\mathbf t}
+\newcommand{\bfu}{\mathbf u}
+\newcommand{\bfv}{\mathbf v}
+\newcommand{\bfw}{\mathbf w}
+\newcommand{\bfx}{\mathbf x}
+\newcommand{\bfy}{\mathbf y}
+\newcommand{\bfz}{\mathbf z}
+
+\newcommand{\bfA}{\mathbf A}
+\newcommand{\bfB}{\mathbf B}
+\newcommand{\bfC}{\mathbf C}
+\newcommand{\bfD}{\mathbf D}
+\newcommand{\bfE}{\mathbf E}
+\newcommand{\bfF}{\mathbf F}
+\newcommand{\bfG}{\mathbf G}
+\newcommand{\bfH}{\mathbf H}
+\newcommand{\bfI}{\mathbf I}
+\newcommand{\bfJ}{\mathbf J}
+\newcommand{\bfK}{\mathbf K}
+\newcommand{\bfL}{\mathbf L}
+\newcommand{\bfM}{\mathbf M}
+\newcommand{\bfN}{\mathbf N}
+\newcommand{\bfO}{\mathbf O}
+\newcommand{\bfP}{\mathbf P}
+\newcommand{\bfQ}{\mathbf Q}
+\newcommand{\bfR}{\mathbf R}
+\newcommand{\bfS}{\mathbf S}
+\newcommand{\bfT}{\mathbf T}
+\newcommand{\bfU}{\mathbf U}
+\newcommand{\bfV}{\mathbf V}
+\newcommand{\bfW}{\mathbf W}
+\newcommand{\bfX}{\mathbf X}
+\newcommand{\bfY}{\mathbf Y}
+\newcommand{\bfZ}{\mathbf Z}
+
+\newcommand{\cA}{\mathcal A}
+\newcommand{\cB}{\mathcal B}
+\newcommand{\cC}{\mathcal C}
+\newcommand{\cD}{\mathcal D}
+\newcommand{\cE}{\mathcal E}
+\newcommand{\cF}{\mathcal F}
+\newcommand{\cG}{\mathcal G}
+\newcommand{\cH}{\mathcal H}
+\newcommand{\cI}{\mathcal I}
+\newcommand{\cJ}{\mathcal J}
+\newcommand{\cK}{\mathcal K}
+\newcommand{\cL}{\mathcal L}
+\newcommand{\cM}{\mathcal M}
+\newcommand{\cN}{\mathcal N}
+\newcommand{\cO}{\mathcal O}
+\newcommand{\cP}{\mathcal P}
+\newcommand{\cQ}{\mathcal Q}
+\newcommand{\cR}{\mathcal R}
+\newcommand{\cS}{\mathcal S}
+\newcommand{\cT}{\mathcal T}
+\newcommand{\cU}{\mathcal U}
+\newcommand{\cV}{\mathcal V}
+\newcommand{\cW}{\mathcal W}
+\newcommand{\cX}{\mathcal X}
+\newcommand{\cY}{\mathcal Y}
+\newcommand{\cZ}{\mathcal Z}
+
+\newcommand{\pA}{\pmb{A}}
+\newcommand{\pB}{\pmb{B}}
+\newcommand{\pC}{\pmb{C}}
+\newcommand{\pD}{\pmb{D}}
+\newcommand{\pE}{\pmb{E}}
+\newcommand{\pF}{\pmb{F}}
+\newcommand{\pG}{\pmb{G}}
+\newcommand{\pH}{\pmb{H}}
+\newcommand{\pI}{\pmb{I}}
+\newcommand{\pJ}{\pmb{J}}
+\newcommand{\pK}{\pmb{K}}
+\newcommand{\pL}{\pmb{L}}
+\newcommand{\pM}{\pmb{M}}
+\newcommand{\pN}{\pmb{N}}
+\newcommand{\pO}{\pmb{O}}
+\newcommand{\pP}{\pmb{P}}
+\newcommand{\pQ}{\pmb{Q}}
+\newcommand{\pR}{\pmb{R}}
+\newcommand{\pS}{\pmb{S}}
+\newcommand{\pT}{\pmb{T}}
+\newcommand{\pU}{\pmb{U}}
+\newcommand{\pV}{\pmb{V}}
+\newcommand{\pW}{\pmb{W}}
+\newcommand{\pX}{\pmb{X}}
+\newcommand{\pY}{\pmb{Y}}
+\newcommand{\pZ}{\pmb{Z}}
+
+\newcommand{\sA}{\mathscr{A}}
+\newcommand{\sB}{\mathscr{B}}
+\newcommand{\sC}{\mathscr{C}}
+\newcommand{\sD}{\mathscr{D}}
+\newcommand{\sE}{\mathscr{E}}
+\newcommand{\sF}{\mathscr{F}}
+\newcommand{\sG}{\mathscr{G}}
+\newcommand{\sH}{\mathscr{H}}
+\newcommand{\sI}{\mathscr{I}}
+\newcommand{\sJ}{\mathscr{J}}
+\newcommand{\sK}{\mathscr{K}}
+\newcommand{\sL}{\mathscr{L}}
+\newcommand{\sM}{\mathscr{M}}
+\newcommand{\sN}{\mathscr{N}}
+\newcommand{\sO}{\mathscr{O}}
+\newcommand{\sP}{\mathscr{P}}
+\newcommand{\sQ}{\mathscr{Q}}
+\newcommand{\sR}{\mathscr{R}}
+\newcommand{\sS}{\mathscr{S}}
+\newcommand{\sT}{\mathscr{T}}
+\newcommand{\sU}{\mathscr{U}}
+\newcommand{\sV}{\mathscr{V}}
+\newcommand{\sW}{\mathscr{W}}
+\newcommand{\sX}{\mathscr{X}}
+\newcommand{\sY}{\mathscr{Y}}
+\newcommand{\sZ}{\mathscr{Z}}
+
+\newcommand{\sfa}{\mathsf a}
+\newcommand{\sfb}{\mathsf b}
+\newcommand{\sfc}{\mathsf c}
+\newcommand{\sfd}{\mathsf d}
+\newcommand{\sfe}{\mathsf e}
+\newcommand{\sff}{\mathsf f}
+\newcommand{\sfg}{\mathsf g}
+\newcommand{\sfh}{\mathsf h}
+\newcommand{\sfi}{\mathsf i}
+\newcommand{\sfj}{\mathsf j}
+\newcommand{\sfk}{\mathsf k}
+\newcommand{\sfl}{\mathsf l}
+\newcommand{\sfm}{\mathsf m}
+\newcommand{\sfn}{\mathsf n}
+\newcommand{\sfo}{\mathsf o}
+\newcommand{\sfp}{\mathsf p}
+\newcommand{\sfq}{\mathsf q}
+\newcommand{\sfr}{\mathsf r}
+\newcommand{\sfs}{\mathsf s}
+\newcommand{\sft}{\mathsf t}
+\newcommand{\sfu}{\mathsf u}
+\newcommand{\sfv}{\mathsf v}
+\newcommand{\sfw}{\mathsf w}
+\newcommand{\sfx}{\mathsf x}
+\newcommand{\sfy}{\mathsf y}
+\newcommand{\sfz}{\mathsf z}
+
+\newcommand{\sfA}{\mathsf{A}}
+\newcommand{\sfB}{\mathsf{B}}
+\newcommand{\sfC}{\mathsf{C}}
+\newcommand{\sfD}{\mathsf{D}}
+\newcommand{\sfE}{\mathsf{E}}
+\newcommand{\sfF}{\mathsf{F}}
+\newcommand{\sfG}{\mathsf{G}}
+\newcommand{\sfH}{\mathsf{H}}
+\newcommand{\sfI}{\mathsf{I}}
+\newcommand{\sfJ}{\mathsf{J}}
+\newcommand{\sfK}{\mathsf{K}}
+\newcommand{\sfL}{\mathsf{L}}
+\newcommand{\sfM}{\mathsf{M}}
+\newcommand{\sfN}{\mathsf{N}}
+\newcommand{\sfO}{\mathsf{O}}
+\newcommand{\sfP}{\mathsf{P}}
+\newcommand{\sfQ}{\mathsf{Q}}
+\newcommand{\sfR}{\mathsf{R}}
+\newcommand{\sfS}{\mathsf{S}}
+\newcommand{\sfT}{\mathsf{T}}
+\newcommand{\sfU}{\mathsf{U}}
+\newcommand{\sfV}{\mathsf{V}}
+\newcommand{\sfW}{\mathsf{W}}
+\newcommand{\sfX}{\mathsf{X}}
+\newcommand{\sfY}{\mathsf{Y}}
+\newcommand{\sfZ}{\mathsf{Z}}
+
+\newcommand{\va}{\underline a}
+\newcommand{\vb}{\underline b}
+\newcommand{\vc}{\underline c}
+\newcommand{\vd}{\underline d}
+\newcommand{\ve}{\underline e}
+\newcommand{\vf}{\underline f}
+\newcommand{\vg}{\underline g}
+\newcommand{\vh}{\underline h}
+\newcommand{\vi}{\underline i}
+\newcommand{\vj}{\underline j}
+\newcommand{\vk}{\underline k}
+\newcommand{\vl}{\underline l}
+\newcommand{\vm}{\underline m}
+\newcommand{\vn}{\underline n}
+\newcommand{\vo}{\underline o}
+\newcommand{\vp}{\underline p}
+\newcommand{\vq}{\underline q}
+\newcommand{\vr}{\underline r}
+\newcommand{\vs}{\underline s}
+\newcommand{\vt}{\underline t}
+\newcommand{\vu}{\underline u}
+\newcommand{\vv}{\underline v}
+\newcommand{\vw}{\underline w}
+\newcommand{\vx}{\underline x}
+\newcommand{\vy}{\underline y}
+\newcommand{\vz}{\underline z}
+
+\newcommand{\vA}{\underline A}
+\newcommand{\vB}{\underline B}
+\newcommand{\vC}{\underline C}
+\newcommand{\vD}{\underline D}
+\newcommand{\vE}{\underline E}
+\newcommand{\vF}{\underline F}
+\newcommand{\vG}{\underline G}
+\newcommand{\vH}{\underline H}
+\newcommand{\vI}{\underline I}
+\newcommand{\vJ}{\underline J}
+\newcommand{\vK}{\underline K}
+\newcommand{\vL}{\underline L}
+\newcommand{\vM}{\underline M}
+\newcommand{\vN}{\underline N}
+\newcommand{\vO}{\underline O}
+\newcommand{\vP}{\underline P}
+\newcommand{\vQ}{\underline Q}
+\newcommand{\vR}{\underline R}
+\newcommand{\vS}{\underline S}
+\newcommand{\vT}{\underline T}
+\newcommand{\vU}{\underline U}
+\newcommand{\vV}{\underline V}
+\newcommand{\vW}{\underline W}
+\newcommand{\vX}{\underline X}
+\newcommand{\vY}{\underline Y}
+\newcommand{\vZ}{\underline Z}
+
+\newcommand{\vbfa}{\underline{\mathbf{a}}}
+\newcommand{\vbfb}{\underline{\mathbf{b}}}
+\newcommand{\vbfc}{\underline{\mathbf{c}}}
+\newcommand{\vbfd}{\underline{\mathbf{d}}}
+\newcommand{\vbfe}{\underline{\mathbf{e}}}
+\newcommand{\vbff}{\underline{\mathbf{f}}}
+\newcommand{\vbfg}{\underline{\mathbf{g}}}
+\newcommand{\vbfh}{\underline{\mathbf{h}}}
+\newcommand{\vbfi}{\underline{\mathbf{i}}}
+\newcommand{\vbfj}{\underline{\mathbf{j}}}
+\newcommand{\vbfk}{\underline{\mathbf{k}}}
+\newcommand{\vbfl}{\underline{\mathbf{l}}}
+\newcommand{\vbfm}{\underline{\mathbf{m}}}
+\newcommand{\vbfn}{\underline{\mathbf{n}}}
+\newcommand{\vbfo}{\underline{\mathbf{o}}}
+\newcommand{\vbfp}{\underline{\mathbf{p}}}
+\newcommand{\vbfq}{\underline{\mathbf{q}}}
+\newcommand{\vbfr}{\underline{\mathbf{r}}}
+\newcommand{\vbfs}{\underline{\mathbf{s}}}
+\newcommand{\vbft}{\underline{\mathbf{t}}}
+\newcommand{\vbfu}{\underline{\mathbf{u}}}
+\newcommand{\vbfv}{\underline{\mathbf{v}}}
+\newcommand{\vbfw}{\underline{\mathbf{w}}}
+\newcommand{\vbfx}{\underline{\mathbf{x}}}
+\newcommand{\vbfy}{\underline{\mathbf{y}}}
+\newcommand{\vbfz}{\underline{\mathbf{z}}}
+
+\newcommand{\vbfA}{\underline{\mathbf{A}}}
+\newcommand{\vbfB}{\underline{\mathbf{B}}}
+\newcommand{\vbfC}{\underline{\mathbf{C}}}
+\newcommand{\vbfD}{\underline{\mathbf{D}}}
+\newcommand{\vbfE}{\underline{\mathbf{E}}}
+\newcommand{\vbfF}{\underline{\mathbf{F}}}
+\newcommand{\vbfG}{\underline{\mathbf{G}}}
+\newcommand{\vbfH}{\underline{\mathbf{H}}}
+\newcommand{\vbfI}{\underline{\mathbf{I}}}
+\newcommand{\vbfJ}{\underline{\mathbf{J}}}
+\newcommand{\vbfK}{\underline{\mathbf{K}}}
+\newcommand{\vbfL}{\underline{\mathbf{L}}}
+\newcommand{\vbfM}{\underline{\mathbf{M}}}
+\newcommand{\vbfN}{\underline{\mathbf{N}}}
+\newcommand{\vbfO}{\underline{\mathbf{O}}}
+\newcommand{\vbfP}{\underline{\mathbf{P}}}
+\newcommand{\vbfQ}{\underline{\mathbf{Q}}}
+\newcommand{\vbfR}{\underline{\mathbf{R}}}
+\newcommand{\vbfS}{\underline{\mathbf{S}}}
+\newcommand{\vbfT}{\underline{\mathbf{T}}}
+\newcommand{\vbfU}{\underline{\mathbf{U}}}
+\newcommand{\vbfV}{\underline{\mathbf{V}}}
+\newcommand{\vbfW}{\underline{\mathbf{W}}}
+\newcommand{\vbfX}{\underline{\mathbf{X}}}
+\newcommand{\vbfY}{\underline{\mathbf{Y}}}
+\newcommand{\vbfZ}{\underline{\mathbf{Z}}}
+
+% Additional macros
+\newcommand{\red}[1]{\textcolor{red}{#1}}
+\def\inputGnumericTable{}
+\let\subsectionautorefname\sectionautorefname
+\let\subsubsectionautorefname\sectionautorefname
+\renewcommand\thesection{\arabic{section}}
+\renewcommand\thesubsection{\thesection.\arabic{subsection}}
+\renewcommand\thesubsubsection{\thesubsection.\arabic{subsubsection}}
+
+\renewcommand\thesectiondis{\arabic{section}}
+\renewcommand\thesubsectiondis{\thesectiondis.\arabic{subsection}}
+\renewcommand\thesubsubsectiondis{\thesubsectiondis.\arabic{subsubsection}}
+\renewcommand\thetable{\arabic{table}}

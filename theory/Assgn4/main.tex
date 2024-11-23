@@ -1,0 +1,76 @@
+\documentclass[conference,compsoc,twocolumn]{IEEEtran}
+\usepackage{./macros}
+
+\begin{document}
+\vspace{3cm}
+\title{CS5300 Theory Assignment 4}
+\author{Gautam Singh\\CS21BTECH11018}
+\maketitle
+
+\bigskip
+
+\begin{enumerate}
+    \item Consider the cases of the following method calls overlapping with the
+    \texttt{add} method.
+    \begin{enumerate}
+        \item \texttt{add}: If the other thread is inserting a new element at
+        another position, then the threads will lock different \texttt{pred}
+        nodes and there will not be any issues in validations and insertions. If
+        both threads are inserting at the same position, then one of them will
+        acquire the lock on \texttt{pred} and insert their new element. The
+        other thread will acquire the lock but fail validation, following which
+        it will attempt to validate and attempt to insert its new element again
+        from the start of the \texttt{while} loop in line 3.
+
+        \item \texttt{remove}: Suppose the \texttt{curr} of the \texttt{add}
+        method is being removed. Then, the threads will have to lock the same
+        \texttt{pred} node and hence the operations will proceed sequentially,
+        with the latter operation failing validation. If the \texttt{pred} of
+        the \texttt{add} call is being removed, then a similar argument follows
+        since this \texttt{pred} node must be locked by both calls.
+
+        \item \texttt{contains}: This will not cause any issues and is
+        linearizable with the concurrent \texttt{add}, even if the element being
+        searched for is concurrently being added.
+    \end{enumerate}
+
+    Thus, in all cases, we need to only lock the \texttt{pred} node during
+    insertion.
+
+    \item Setting the \texttt{next} field of a node to be deleted to
+    \texttt{null} would effectively de-link the list, destroying information
+    about the next nodes that may not be deleted. Other concurrent calls can
+    travel through marked nodes in the \texttt{LazyList} implementation,
+    especially in the interval between logical deletion (by marking the node)
+    and physical deletion (actually swinging the \texttt{next} pointer). Hence,
+    this change will break the lazy implementation.
+
+    This change will not work even in case of the \texttt{LockFreeList} since
+    the \texttt{find} method performs the physical deletions of marked nodes,
+    and hence it travels through logically deleted nodes as well.
+
+    \item
+    \begin{enumerate}
+        \item The \texttt{compareAndSetMark} method does not check if
+        \texttt{curr.next} is equal to \texttt{succ} unlike the original
+        algorithm. This makes the list implementation incorrect. Between lines
+        54 and the (modified) line 55, a concurrent addition might have taken
+        place changing the successor node of \texttt{curr}, thus
+        \texttt{pred.next} will be incorrectly set in line 58, skipping the new
+        nodes inserted after \texttt{curr}.
+
+        \item The \texttt{attemptMark} method is atmoic and can spuriously fail.
+        It checks if \texttt{cur.next} equals \texttt{succ} from line 54 and
+        then only marks the node for deletion. This maintains the correctness of
+        the list.
+    \end{enumerate}
+
+    \item The minimum number of blocks to be used is
+    \(\left\lceil\frac{8000}{1024}\right\rceil = 8\). This means that there are
+    \(8 \times 1024 = 8192\) threads in the grid. The programmer should
+    configure the kernel call to have 8 blocks and 1024 threads per block. In
+    CUDA, this would be \texttt{kernel<<< ceil(8000/1024.0), 1024 >>> (args)} or
+    \texttt{kernel<<< 8, 1024 >>> (args)}.
+\end{enumerate}
+
+\end{document}
