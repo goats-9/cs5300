@@ -31,7 +31,8 @@
 
         \item \texttt{contains}: This will not cause any issues and is
         linearizable with the concurrent \texttt{add}, even if the element being
-        searched for is concurrently being added.
+        searched for is concurrently being added. In this case, both calls must
+        lock the same \texttt{pred} node, making the calls linearizable.
     \end{enumerate}
 
     Thus, in all cases, we need to only lock the \texttt{pred} node during
