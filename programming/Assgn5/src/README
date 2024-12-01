@@ -1,0 +1,12 @@
+This zip archive contains C++ source code for performance evaluation of the
+savings account algorithm. Compile the source code with the command
+
+    g++ -O2 -std=c++20 -pthread Src-CS21BTECH11018.cpp
+
+Run the executable using the command
+
+    ./a.out
+
+Be sure to include the input file "inp-params.txt" in the same directory as the
+source code before running the executable. Also, the code compiles ONLY on
+compilers that support C++20 or above.
