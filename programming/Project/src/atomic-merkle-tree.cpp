@@ -2,26 +2,26 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
-#include <pthread.h>
+#include <thread>
 #include <random>
-#include <unistd.h>
 #include <chrono>
 #include <atomic>
+#include <cmath>
 
 using namespace std;
 
 class Timer
 {
 private:
-    std::chrono::high_resolution_clock::time_point start_time;
+    chrono::high_resolution_clock::time_point start_time;
 
 public:
-    Timer() { start_time = std::chrono::high_resolution_clock::now(); }
+    Timer() { start_time = chrono::high_resolution_clock::now(); }
 
     double getDuration() const
     {
-        auto end_time = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<double, std::milli> elapsed = end_time - start_time;
+        auto end_time = chrono::high_resolution_clock::now();
+        chrono::duration<double, milli> elapsed = end_time - start_time;
         return elapsed.count();
     }
 };
@@ -30,23 +30,19 @@ class MerkleTree
 {
 public:
     int numOfLeaves;
+    int treeSize;
     string *tree;
     atomic<bool> *nodeState;
-    pthread_mutex_t *locks;
 
-    MerkleTree(int numOfLeaves)
+    MerkleTree(int numOfLeaves) : numOfLeaves(numOfLeaves)
     {
-        this->numOfLeaves = numOfLeaves;
-        int treeSize = 2 * numOfLeaves - 1;
-
-        this->tree = new string[treeSize]();
-        this->locks = new pthread_mutex_t[treeSize];
-        this->nodeState = new std::atomic<bool>[treeSize];
+        treeSize = 2 * numOfLeaves - 1;
+        tree = new string[treeSize];
+        nodeState = new atomic<bool>[treeSize];
 
         for (int i = 0; i < treeSize; i++)
         {
             nodeState[i] = false;
-            pthread_mutex_init(&locks[i], nullptr);
             tree[i] = "Node_" + to_string(i);
         }
     }
@@ -54,56 +50,25 @@ public:
     ~MerkleTree()
     {
         delete[] tree;
-        delete[] locks;
-    }
-
-    void lockNode(int index)
-    {
-        pthread_mutex_lock(&locks[index]);
-    }
-
-    void unlockNode(int index)
-    {
-        pthread_mutex_unlock(&locks[index]);
+        delete[] nodeState;
     }
 
     void printTree() const
     {
-        int treeSize = 2 * numOfLeaves - 1;
-        int levels = (int)log2(treeSize + 1);
+        int levels = static_cast<int>(log2(treeSize + 1));
         int maxWidth = 15;
 
-        vector<vector<string>> treeLevels(levels);
-        vector<vector<string>> stateLevels(levels);
-
-        int currentIndex = 0;
         for (int level = 0; level < levels; ++level)
         {
-            int nodesInLevel = std::pow(2, level);
-            int startIdx = std::pow(2, level) - 1;
+            int nodesInLevel = pow(2, level);
+            int startIdx = pow(2, level) - 1;
 
             for (int i = 0; i < nodesInLevel && (startIdx + i) < treeSize; ++i)
             {
-                treeLevels[level].push_back(tree[startIdx + i]);
-                stateLevels[level].push_back(nodeState[startIdx + i] ? "T" : "F");
-            }
-        }
-
-        int maxSpacing = std::pow(2, levels - 1) * maxWidth;
-        for (int level = 0; level < levels; ++level)
-        {
-            int currentSpacing = maxSpacing / std::pow(2, level);
-
-            for (int i = 0; i < treeLevels[level].size(); ++i)
-            {
-                cout << treeLevels[level][i] << "(" << stateLevels[level][i] << ")";
-
-                if (i < treeLevels[level].size() - 1)
+                cout << tree[startIdx + i] << "(" << (nodeState[startIdx + i] ? "T" : "F") << ")";
+                if (i < nodesInLevel - 1)
                 {
-                    for (int s = 0; s < currentSpacing - treeLevels[level][i].length(); ++s)
-                    {
-                        cout << " ";
-                    }
+                    cout << "   ";
                 }
             }
             cout << endl;
@@ -113,7 +78,6 @@ public:
     int leftChild(int index) const { return 2 * index + 1; }
     int rightChild(int index) const { return 2 * index + 2; }
     int parent(int index) const { return (index - 1) / 2; }
-    int siblingIndex(int index) const { return (index % 2 == 0) ? index - 1 : index + 1; }
 };
 
 struct ThreadTask
@@ -123,11 +87,7 @@ struct ThreadTask
     int threadId;
 
     ThreadTask(int idx = 0, MerkleTree *tree = nullptr, int threadId = 0)
-    {
-        this->updateIdx = idx;
-        this->tree = tree;
-        this->threadId = threadId;
-    }
+        : updateIdx(idx), tree(tree), threadId(threadId) {}
 };
 
 int getExponentialTime(double mean)
@@ -138,12 +98,11 @@ int getExponentialTime(double mean)
     return static_cast<int>(d(gen) * 1000);
 }
 
-void *updateUsingThread(void *arg)
+void updateUsingThread(ThreadTask task)
 {
-    ThreadTask *data = static_cast<ThreadTask *>(arg);
-    int idx = data->updateIdx;
-    int threadId = data->threadId;
-    MerkleTree *tree = data->tree;
+    int idx = task.updateIdx;
+    int threadId = task.threadId;
+    MerkleTree *tree = task.tree;
     int leafCount = tree->numOfLeaves;
     int temp = idx + leafCount - 1;
 
@@ -157,9 +116,9 @@ void *updateUsingThread(void *arg)
             while (tree->nodeState[temp].compare_exchange_strong(expected, desired))
             {
             }
-            return nullptr;
+            return;
         }
-        usleep(getExponentialTime(0.05) * 1000);
+        this_thread::sleep_for(chrono::milliseconds(getExponentialTime(0.05)));
         tree->tree[temp] = "Updated_" + to_string(temp) + "(" + to_string(threadId) + ")";
         tree->nodeState[temp] = false;
 
@@ -168,15 +127,11 @@ void *updateUsingThread(void *arg)
 
     if (tree->nodeState[temp].compare_exchange_strong(expected, desired))
     {
-        return nullptr;
+        return;
     }
 
-    tree->lockNode(temp);
-    usleep(getExponentialTime(0.05) * 1000);
+    this_thread::sleep_for(chrono::milliseconds(getExponentialTime(0.05)));
     tree->tree[temp] = "Updated_" + to_string(temp) + "(" + to_string(threadId) + ")";
-    tree->unlockNode(temp);
-
-    return nullptr;
 }
 
 int commonAncestor(int node1, int node2, MerkleTree &tree)
@@ -197,9 +152,6 @@ int main()
     int batch[] = {0, 1, 3, 4, 6};
     int batchSize = sizeof(batch) / sizeof(batch[0]);
 
-    pthread_t *threads = new pthread_t[batchSize];
-    ThreadTask *threadData = new ThreadTask[batchSize];
-
     for (int i = 0; i < batchSize; i++)
     {
         for (int j = 0; j < batchSize; j++)
@@ -210,24 +162,24 @@ int main()
             int node2 = batch[j] + 7;
 
             int nodeToBeMarked = commonAncestor(node1, node2, tree);
-            // cout << "(" << batch[i] << ", " << batch[i + 1] << ") = " << nodeToBeMarked << endl;
             tree.nodeState[nodeToBeMarked] = true;
         }
     }
+
     cout << "\nMarking Common Ancestors:\n";
     tree.printTree();
 
     Timer timer;
+    thread threads[batchSize];
 
     for (int i = 0; i < batchSize; ++i)
     {
-        threadData[i] = ThreadTask(batch[i], &tree, i);
-        pthread_create(&threads[i], nullptr, updateUsingThread, &threadData[i]);
+        threads[i] = thread(updateUsingThread, ThreadTask(batch[i], &tree, i));
     }
 
     for (int i = 0; i < batchSize; ++i)
     {
-        pthread_join(threads[i], nullptr);
+        threads[i].join();
     }
 
     double timeTaken = timer.getDuration();
@@ -235,9 +187,6 @@ int main()
     tree.printTree();
 
     cout << "Time taken for updating the batch: " << timeTaken << " ms" << endl;
-
-    delete[] threads;
-    delete[] threadData;
 
     return 0;
 }

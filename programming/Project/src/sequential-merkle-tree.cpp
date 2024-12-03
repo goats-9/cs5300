@@ -2,10 +2,11 @@
 #include <string>
 #include <sstream>
 #include <iomanip>
-#include <pthread.h>
+#include <thread>
 #include <random>
-#include <unistd.h>
 #include <chrono>
+#include <vector>
+#include <mutex>
 
 using namespace std;
 
@@ -30,7 +31,7 @@ class MerkleTree
 public:
     int numOfLeaves;
     string *tree;
-    pthread_mutex_t *locks;
+    std::mutex *locks;
 
     MerkleTree(int numOfLeaves)
     {
@@ -38,11 +39,10 @@ public:
         int treeSize = 2 * numOfLeaves - 1;
 
         this->tree = new string[treeSize]();
-        this->locks = new pthread_mutex_t[treeSize];
+        this->locks = new std::mutex[treeSize];
 
         for (int i = 0; i < treeSize; i++)
         {
-            pthread_mutex_init(&locks[i], nullptr);
             tree[i] = "Node_" + to_string(i);
         }
     }
@@ -55,12 +55,12 @@ public:
 
     void lockNode(int index)
     {
-        pthread_mutex_lock(&locks[index]);
+        locks[index].lock();
     }
 
     void unlockNode(int index)
     {
-        pthread_mutex_unlock(&locks[index]);
+        locks[index].unlock();
     }
 
     void printTree() const
@@ -117,11 +117,7 @@ struct ThreadTask
     int threadId;
 
     ThreadTask(int idx = 0, MerkleTree *tree = nullptr, int threadId = 0)
-    {
-        this->updateIdx = idx;
-        this->tree = tree;
-        this->threadId = threadId;
-    }
+        : updateIdx(idx), tree(tree), threadId(threadId) {}
 };
 
 int getExponentialTime(double mean)
@@ -132,19 +128,18 @@ int getExponentialTime(double mean)
     return static_cast<int>(d(gen) * 1000);
 }
 
-void *updateUsingThread(void *arg)
+void updateUsingThread(ThreadTask task)
 {
-    ThreadTask *data = static_cast<ThreadTask *>(arg);
-    int idx = data->updateIdx;
-    int threadId = data->threadId;
-    MerkleTree *tree = data->tree;
+    int idx = task.updateIdx;
+    int threadId = task.threadId;
+    MerkleTree *tree = task.tree;
     int leafCount = tree->numOfLeaves;
     int temp = idx + leafCount - 1;
 
     while (temp > 0)
     {
         tree->lockNode(temp);
-        usleep(getExponentialTime(0.5) * 1000);
+        std::this_thread::sleep_for(std::chrono::milliseconds(getExponentialTime(0.05)));
         tree->tree[temp] = "Updated_" + to_string(temp) + "(" + to_string(threadId) + ")";
         tree->unlockNode(temp);
 
@@ -152,11 +147,9 @@ void *updateUsingThread(void *arg)
     }
 
     tree->lockNode(temp);
-    usleep(getExponentialTime(0.5) * 1000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(getExponentialTime(0.05)));
     tree->tree[temp] = "Updated_" + to_string(temp) + "(" + to_string(threadId) + ")";
     tree->unlockNode(temp);
-
-    return nullptr;
 }
 
 int main()
@@ -164,23 +157,27 @@ int main()
     MerkleTree tree(8);
     tree.printTree();
 
-    int batch[] = {0, 1, 3, 6};
+    int batch[] = {0, 1, 4, 6};
     int batchSize = sizeof(batch) / sizeof(batch[0]);
 
-    pthread_t *threads = new pthread_t[batchSize];
-    ThreadTask *threadData = new ThreadTask[batchSize];
+    vector<thread> threads;
+    vector<ThreadTask> threadData;
+
+    for (int i = 0; i < batchSize; ++i)
+    {
+        threadData.emplace_back(batch[i], &tree, i);
+    }
 
     Timer timer;
 
     for (int i = 0; i < batchSize; ++i)
     {
-        threadData[i] = ThreadTask(batch[i], &tree, i);
-        pthread_create(&threads[i], nullptr, updateUsingThread, &threadData[i]);
+        threads.emplace_back(updateUsingThread, threadData[i]);
     }
 
-    for (int i = 0; i < batchSize; ++i)
+    for (auto &th : threads)
     {
-        pthread_join(threads[i], nullptr);
+        th.join();
     }
 
     double timeTaken = timer.getDuration();
@@ -188,9 +185,6 @@ int main()
     tree.printTree();
 
     cout << "Time taken for updating the batch: " << timeTaken << " ms" << endl;
-
-    delete[] threads;
-    delete[] threadData;
 
     return 0;
 }
