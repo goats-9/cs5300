@@ -7,8 +7,11 @@
 #include <chrono>
 #include <vector>
 #include <mutex>
+#include <fstream>
 
 using namespace std;
+
+const string inputFileName = "inp.txt";
 
 class Timer
 {
@@ -154,11 +157,29 @@ void updateUsingThread(ThreadTask task)
 
 int main()
 {
-    MerkleTree tree(8);
-    tree.printTree();
+    ifstream inputFile(inputFileName);
+    if (!inputFile.is_open())
+    {
+        cerr << "Error: Unable to open file " << inputFileName << endl;
+        return 1;
+    }
 
-    int batch[] = {0, 1, 4, 6};
-    int batchSize = sizeof(batch) / sizeof(batch[0]);
+    int leafCount;
+    inputFile >> leafCount;
+
+    MerkleTree tree(leafCount);
+    // cout << "Initial Tree:" << endl;
+    // tree.printTree();
+
+    int batchSize;
+    inputFile >> batchSize;
+    vector<int> batch(batchSize);
+
+    for (int i = 0; i < batchSize; ++i)
+    {
+        inputFile >> batch[i];
+    }
+    inputFile.close();
 
     vector<thread> threads;
     vector<ThreadTask> threadData;
@@ -181,10 +202,10 @@ int main()
     }
 
     double timeTaken = timer.getDuration();
-    cout << "\nTree After Updates:\n";
-    tree.printTree();
+    // cout << "\nTree After Updates:\n";
+    // tree.printTree();
 
-    cout << "Time taken for updating the batch: " << timeTaken << " ms" << endl;
+    cout << "" << timeTaken << "" << endl;
 
     return 0;
 }
