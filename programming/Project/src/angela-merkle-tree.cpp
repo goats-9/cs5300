@@ -8,6 +8,7 @@
 #include <atomic>
 #include <cmath>
 #include <fstream>
+#include <mutex>
 
 using namespace std;
 
@@ -36,12 +37,14 @@ public:
     int treeSize;
     string *tree;
     atomic<bool> *nodeState;
+    mutex *locks;
 
     MerkleTree(int numOfLeaves) : numOfLeaves(numOfLeaves)
     {
         treeSize = 2 * numOfLeaves - 1;
         tree = new string[treeSize];
         nodeState = new atomic<bool>[treeSize];
+        this->locks = new mutex[treeSize];
 
         for (int i = 0; i < treeSize; i++)
         {
@@ -54,6 +57,17 @@ public:
     {
         delete[] tree;
         delete[] nodeState;
+        delete[] locks;
+    }
+
+    void lockNode(int index)
+    {
+        locks[index].lock();
+    }
+
+    void unlockNode(int index)
+    {
+        locks[index].unlock();
     }
 
     void printTree() const
@@ -109,27 +123,26 @@ void updateUsingThread(ThreadTask task)
     int leafCount = tree->numOfLeaves;
     int temp = idx + leafCount - 1;
 
-    bool expected = true;
-    bool desired = false;
-
     while (temp > 0)
     {
         if (tree->nodeState[temp])
         {
-            while (tree->nodeState[temp].compare_exchange_strong(expected, desired))
-            {
-            }
+            tree->lockNode(temp);
+            tree->nodeState[temp] = false;
+            tree->unlockNode(temp);
             return;
         }
         this_thread::sleep_for(chrono::milliseconds(getExponentialTime(0.05)));
         tree->tree[temp] = "Updated_" + to_string(temp) + "(" + to_string(threadId) + ")";
-        tree->nodeState[temp] = false;
 
         temp = tree->parent(temp);
     }
 
-    if (tree->nodeState[temp].compare_exchange_strong(expected, desired))
+    if (tree->nodeState[temp])
     {
+        tree->lockNode(temp);
+        tree->nodeState[temp] = false;
+        tree->unlockNode(temp);
         return;
     }
 
